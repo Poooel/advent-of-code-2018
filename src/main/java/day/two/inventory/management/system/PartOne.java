@@ -11,6 +11,7 @@ public class PartOne
 {
     public static void main(String [ ] args) throws Exception
     {
+        // Get all the line in the file, as a list of string split on new line separator
         List<String> inputs = Files.readAllLines(Paths.get("data/day-two.data"));
         // Keep the counter of the occurences of two chars and three chars
         int twos = 0;

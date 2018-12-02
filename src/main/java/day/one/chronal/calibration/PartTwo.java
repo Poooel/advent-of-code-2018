@@ -10,8 +10,11 @@ public class PartTwo
 {
     public static void main(String [ ] args) throws Exception
     {
+        // Get all the line in the file, as a list of string split on new line separator
         List<String> input = Files.readAllLines(Paths.get("data/day-one.data"));
+        // A map of frequencies to check if one already exists
         Map<Integer, Integer> frequencies = new HashMap<>();
+        // The frequency we will compute every iteration
         int frequency = 0;
 
         // While true loop to loop over the list while a result hasn't been found

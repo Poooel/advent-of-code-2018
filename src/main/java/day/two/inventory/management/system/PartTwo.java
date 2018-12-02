@@ -8,9 +8,13 @@ public class PartTwo
 {
     public static void main(String [ ] args) throws Exception
     {
+        // Get all the line in the file, as a list of string split on new line separator
         List<String> inputs = Files.readAllLines(Paths.get("data/day-two.data"));
+        // String index to find the string for the result
         int stringIndex = 0;
+        // The char to remove for the result
         int charIndex = 0;
+        // The number of errors we want between the strings
         int errorThreshold = 1;
 
         // For all the strings we got in the input
