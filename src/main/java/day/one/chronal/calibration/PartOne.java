@@ -9,7 +9,7 @@ public class PartOne
     public static void main(String [ ] args) throws IOException
     {
         System.out.println(String.format("The answer is %s",
-                Files.readAllLines(Paths.get("day-one.data"))
+                Files.readAllLines(Paths.get("data/day-one.data"))
                 .stream()
                 .mapToInt(Integer::parseInt)
                 .sum())

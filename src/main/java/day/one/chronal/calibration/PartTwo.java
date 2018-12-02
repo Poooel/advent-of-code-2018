@@ -10,7 +10,7 @@ public class PartTwo
 {
     public static void main(String [ ] args) throws Exception
     {
-        List<String> input = Files.readAllLines(Paths.get("day-one.data"));
+        List<String> input = Files.readAllLines(Paths.get("data/day-one.data"));
         Map<Integer, Integer> frequencies = new HashMap<>();
         int frequency = 0;
 
