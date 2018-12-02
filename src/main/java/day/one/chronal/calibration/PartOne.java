@@ -9,10 +9,16 @@ public class PartOne
     public static void main(String [ ] args) throws IOException
     {
         System.out.println(String.format("The answer is %s",
+                // Get all the number in the file,
+                // as a list of string split on new line separator
                 Files.readAllLines(Paths.get("data/day-one.data"))
-                .stream()
-                .mapToInt(Integer::parseInt)
-                .sum())
+                        // Stream it
+                        .stream()
+                        // Transform the stream into an IntStream by parsing the string
+                        .mapToInt(Integer::parseInt)
+                        // Make the sum of it
+                        .sum()
+                )
         );
     }
 }
