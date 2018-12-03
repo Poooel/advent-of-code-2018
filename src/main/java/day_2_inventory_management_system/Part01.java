@@ -1,4 +1,4 @@
-package day.two.inventory.management.system;
+package day_2_inventory_management_system;
 
 import com.google.common.base.CharMatcher;
 
@@ -7,12 +7,12 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PartOne
+public class Part01
 {
     public static void main(String [ ] args) throws Exception
     {
         // Get all the line in the file, as a list of string split on new line separator
-        List<String> inputs = Files.readAllLines(Paths.get("data/day-two.data"));
+        List<String> inputs = Files.readAllLines(Paths.get("data/day_02.input"));
         // Keep the counter of the occurences of two chars and three chars
         int twos = 0;
         int threes = 0;

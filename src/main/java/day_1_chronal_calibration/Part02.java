@@ -1,4 +1,4 @@
-package day.one.chronal.calibration;
+package day_1_chronal_calibration;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -6,12 +6,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class PartTwo
+public class Part02
 {
     public static void main(String [ ] args) throws Exception
     {
         // Get all the line in the file, as a list of string split on new line separator
-        List<String> input = Files.readAllLines(Paths.get("data/day-one.data"));
+        List<String> input = Files.readAllLines(Paths.get("data/day_01.input"));
         // A map of frequencies to check if one already exists
         Map<Integer, Integer> frequencies = new HashMap<>();
         // The frequency we will compute every iteration

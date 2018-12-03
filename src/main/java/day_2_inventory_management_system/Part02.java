@@ -1,15 +1,15 @@
-package day.two.inventory.management.system;
+package day_2_inventory_management_system;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class PartTwo
+public class Part02
 {
     public static void main(String [ ] args) throws Exception
     {
         // Get all the line in the file, as a list of string split on new line separator
-        List<String> inputs = Files.readAllLines(Paths.get("data/day-two.data"));
+        List<String> inputs = Files.readAllLines(Paths.get("data/day_02.input"));
         // String index to find the string for the result
         int stringIndex = 0;
         // The char to remove for the result
