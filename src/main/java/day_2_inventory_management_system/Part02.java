@@ -6,10 +6,10 @@ import java.util.List;
 
 public class Part02
 {
-    public static void main(String [ ] args) throws Exception
+    public static void main(String[] args) throws Exception
     {
         // Get all the line in the file, as a list of string split on new line separator
-        List<String> inputs = Files.readAllLines(Paths.get("data/day_02.input"));
+        List<String> inputs = Files.readAllLines(Paths.get("input/day_02.input"));
         // String index to find the string for the result
         int stringIndex = 0;
         // The char to remove for the result

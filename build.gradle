@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'net.ltgt.apt' version '0.19'
 }
 
 version '1.0-SNAPSHOT'
@@ -11,6 +12,10 @@ repositories {
 }
 
 dependencies {
+    // Guava
     compile group: 'com.google.guava', name: 'guava', version: '27.0-jre'
-
+    
+    // Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.4'
+    apt 'org.projectlombok:lombok:1.18.4'
 }
