@@ -37,8 +37,8 @@ public class Part01 {
     }
 
     public static boolean areSameTypeButOpposingPolarity(Character c1, Character c2) {
-        // If the two chars are the same letter, we lower case them, because them can be of
-        // different case
+        // If the two chars are the same letter, we lower case them, because they can be of
+        // different case and we check that they are indeed the same char
         if (Character.toLowerCase(c1) == Character.toLowerCase(c2)) {
             // first if checks: Aa
             if (Character.isUpperCase(c1) && Character.isLowerCase(c2)) {
