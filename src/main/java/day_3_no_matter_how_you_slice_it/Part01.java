@@ -42,8 +42,7 @@ public class Part01
         inputs.forEach(input -> {
             String[] splitInput = input.split("@");
 
-            String id = splitInput[0].trim();
-            id = id.substring(1);
+            String id = splitInput[0].trim().substring(1);
 
             String[] nextParts = splitInput[1].split(":");
             String[] offsets = nextParts[0].split(",");
