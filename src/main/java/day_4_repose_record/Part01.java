@@ -8,10 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Part01
-{
-    public static void main(String[] args) throws Exception
-    {
+public class Part01 {
+    public static void main(String[] args) throws Exception {
         // Get all the line in the file, as a list of string split on new line separator
         List<String> inputs = Files.readAllLines(Paths.get("input/day_04.input"));
 

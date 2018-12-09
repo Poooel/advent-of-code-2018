@@ -5,10 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class Part02
-{
-    public static void main(String[] args) throws IOException
-    {
+public class Part02 {
+    public static void main(String[] args) throws IOException {
         // Get all the line in the file, as a list of string split on new line separator
         List<String> inputs = Files.readAllLines(Paths.get("input/day_03.input"));
 

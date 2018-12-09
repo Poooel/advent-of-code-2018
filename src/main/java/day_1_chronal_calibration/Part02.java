@@ -6,10 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Part02
-{
-    public static void main(String[] args) throws Exception
-    {
+public class Part02 {
+    public static void main(String[] args) throws Exception {
         // Get all the line in the file, as a list of string split on new line separator
         List<String> input = Files.readAllLines(Paths.get("input/day_01.input"));
         // A map of frequencies to check if one already exists

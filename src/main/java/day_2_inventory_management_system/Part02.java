@@ -4,10 +4,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class Part02
-{
-    public static void main(String[] args) throws Exception
-    {
+public class Part02 {
+    public static void main(String[] args) throws Exception {
         // Get all the line in the file, as a list of string split on new line separator
         List<String> inputs = Files.readAllLines(Paths.get("input/day_02.input"));
         // String index to find the string for the result

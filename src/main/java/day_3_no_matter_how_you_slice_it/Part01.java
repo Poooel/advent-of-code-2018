@@ -8,10 +8,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Part01
-{
-    public static void main(String[] args) throws IOException
-    {
+public class Part01 {
+    public static void main(String[] args) throws IOException {
         System.out.println(String.format("The answer is: %s",
             // Parse the input
             parseInput(
