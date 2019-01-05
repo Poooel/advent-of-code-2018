@@ -9,7 +9,7 @@ import java.io.InputStreamReader;
 @UtilityClass
 class LauncherHelper {
     private boolean isInRange(int number, int lowerBound, int upperBound) {
-        return number > lowerBound && number < upperBound;
+        return number >= lowerBound && number <= upperBound;
     }
 
     private boolean isInteger(String input) {
@@ -29,7 +29,7 @@ class LauncherHelper {
 
         String input = bufferedReader.readLine();
 
-        while (!isInteger(input) && isInRange(Integer.parseInt(input), lowerBound, upperBound)) {
+        while (!isInteger(input) || !isInRange(Integer.parseInt(input), lowerBound, upperBound)) {
             System.out.println(retryMessage);
             input = bufferedReader.readLine();
         }

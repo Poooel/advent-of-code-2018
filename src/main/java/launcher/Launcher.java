@@ -5,6 +5,7 @@ import days.ChronalCalibration;
 import days.ChronalCoordinates;
 import days.InventoryManagementSystem;
 import days.NoMatterHowYouSliceIt;
+import days.NotDoneYet;
 import days.ReposeRecord;
 import lombok.SneakyThrows;
 
@@ -30,14 +31,18 @@ public class Launcher {
         if (choosenPart == 1) {
             System.out.println(
                 String.format(
-                    "The answer is: %s",
+                    "The answer for Day %02d Part %d is: %s",
+                    choosenDay,
+                    choosenPart,
                     getCorrespondingExecutableDay(choosenDay).executePartOne()
                 )
             );
         } else {
             System.out.println(
                 String.format(
-                    "The answer is: %s",
+                    "The answer for Day %02d Part %d is: %s",
+                    choosenDay,
+                    choosenPart,
                     getCorrespondingExecutableDay(choosenDay).executePartTwo()
                 )
             );
@@ -59,7 +64,7 @@ public class Launcher {
             case 6:
                 return new ChronalCoordinates();
             default:
-                return new ChronalCalibration();
+                return new NotDoneYet();
         }
     }
 }
