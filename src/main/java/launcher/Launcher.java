@@ -57,6 +57,8 @@ public class Launcher {
                 return new Day5_AlchemicalReduction();
             case 6:
                 return new Day6_ChronalCoordinates();
+            case 7:
+                return new Day7_TheSumOfItsParts();
             default:
                 return new Day0_NotDoneYet();
         }
