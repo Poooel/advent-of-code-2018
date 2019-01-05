@@ -26,12 +26,13 @@ public class Day6_ChronalCoordinates implements Executable {
 
     @Override
     public String executePartTwo() {
-        List<String> inputs = ChallengeHelper.readInputData(6);
-        // Parse the list of string to coordinates
-        List<Point> points = parseCoordinates(inputs);
-        boolean[][] map =  computeSafeArea(points);
-
-        return String.valueOf(findLargestArea(map));
+        return String.valueOf(
+            computeSafeArea(
+                parseCoordinates(
+                    ChallengeHelper.readInputData(6)
+                )
+            )
+        );
     }
 
     private List<Point> parseCoordinates(List<String> inputs) {
@@ -73,9 +74,14 @@ public class Day6_ChronalCoordinates implements Executable {
     }
 
     private Point[][] initializeMap(List<Point> points) {
+        // The width is the biggest X we found in the coordinates
         int width = findBiggestX(points);
+        // The height is the biggest Y we found in the coordinates
+        // this is to avoid doing unnecessary work when computing
+        // area, if the map is bigger than needed
         int height = findBiggestY(points);
 
+        // The map is a 2 dimensional array of points
         Point[][] map = new Point[width][];
 
         for (int i = 0; i < width; i++) {
@@ -86,14 +92,19 @@ public class Day6_ChronalCoordinates implements Executable {
     }
 
     private Point[][] computeCoordinates(List<Point> points) {
+        // Initialize the map
         Point[][] map = initializeMap(points);
 
+        // Create a new list to hold the distances
         List<Distance> distances = new ArrayList<>();
 
         for (int i  = 0; i < map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {
+                // Save the current point
                 Point currentPoint = new Point(i, j);
 
+                // For each points, compute the distance from the current point to the
+                // given point and add it to the list
                 for (Point point : points) {
                     distances.add(
                         new Distance(
@@ -103,12 +114,17 @@ public class Day6_ChronalCoordinates implements Executable {
                     );
                 }
 
+                // If the min distance is present more than once in the list
+                // it means the points is equally far from two points in the list of input
+                // so we put a null. If the point is present only once then put the corresponding
+                // point in the map
                 if (isMinValuePresentMoreThanOnce(distances)) {
                     map[i][j] = null;
                 } else {
                     map[i][j] = findMinDistance(distances).getPoint();
                 }
 
+                // Clear the distances as we start another point on the map
                 distances.clear();
             }
         }
@@ -118,20 +134,29 @@ public class Day6_ChronalCoordinates implements Executable {
 
     private boolean isMinValuePresentMoreThanOnce(List<Distance> distances) {
         return distances
+            // Stream the list of distances
             .stream()
+            // Filter the item that have the same value
             .filter(item -> item.getValue() == findMinDistance(distances).getValue())
+            // Collect them into a list
             .collect(Collectors.toList())
+            // If the size of this list is bigger than one, then one value is present
+            // more than one time
             .size() > 1;
     }
 
     private Distance findMinDistance(List<Distance> distances) {
         return distances
+            // Stream the list of distances
             .stream()
+            // Find the min in the list using the getValue of the distance object
             .min(Comparator.comparingInt(Distance::getValue))
+            // Get it as min return an Optional
             .get();
     }
 
     private int computeManhattanDistance(Point a, Point b) {
+        // https://en.wikipedia.org/wiki/Taxicab_geometry
         return Math.abs(a.getX() - b.getX()) + Math.abs(a.getY() - b.getY());
     }
 
@@ -180,16 +205,20 @@ public class Day6_ChronalCoordinates implements Executable {
             }
         }
 
+        // Remove the null key from the areas map, it corresponds to the points
+        // we excluded earlier or two equally distant points
         areas.remove(null);
 
         return Collections.max(areas.values());
     }
 
-    private boolean[][] computeSafeArea(List<Point> points) {
-        boolean[][] map = initializeSafeMap(points);
+    private int computeSafeArea(List<Point> points) {
+        // We don't need to actually compute the map this time
+        // so we just use a counter to keep track of the safe area
+        int safeZone = 0;
 
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[i].length; j++) {
+        for (int i = 0; i < findBiggestX(points); i++) {
+            for (int j = 0; j < findBiggestY(points); j++) {
                 Point currentPoint = new Point(i, j);
                 int sumOfDistances = 0;
 
@@ -197,38 +226,15 @@ public class Day6_ChronalCoordinates implements Executable {
                     sumOfDistances += computeManhattanDistance(currentPoint, point);
                 }
 
-                map[i][j] = sumOfDistances < 10000;
-            }
-        }
-
-        return map;
-    }
-
-    private boolean[][] initializeSafeMap(List<Point> points) {
-        int width = findBiggestX(points);
-        int height = findBiggestY(points);
-
-        boolean[][] map = new boolean[width][];
-
-        for (int i = 0; i < width; i++) {
-            map[i] = new boolean[height];
-        }
-
-        return map;
-    }
-
-    private int findLargestArea(boolean[][] map) {
-        int area = 0;
-
-        for (boolean[] safeRow : map) {
-            for (boolean isSafe : safeRow) {
-                if (isSafe) {
-                    area++;
+                // if the sum of distances to this point is less than 10000 then
+                // increment safe zone counter
+                if (sumOfDistances < 10000) {
+                    safeZone++;
                 }
             }
         }
 
-        return area;
+        return safeZone;
     }
 
     @Value
