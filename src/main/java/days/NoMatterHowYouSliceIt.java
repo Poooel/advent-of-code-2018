@@ -1,40 +1,65 @@
-package day_3_no_matter_how_you_slice_it;
+package days;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import launcher.ChallengeHelper;
+import launcher.Executable;
+import lombok.Value;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class Part01 {
-    public static void main(String[] args) throws IOException {
-        System.out.println(String.format("The answer is: %s",
-            // Parse the input
-            parseInput(
-                // Read all the lines of the file
-                Files.readAllLines(
-                    Paths.get("input/day_03.input")
-                )
-            )
-                // Get the List of List of List of String which represent the fabric
-                .getFabric()
-                // Stream it
-                .stream()
-                // Stream the inner list
-                .map(Collection::stream)
-                // Flat map the stream of stream into a single stream
-                .flatMap(x -> x)
-                // Filter to get only the point where the claim overlaps
-                .filter(x -> x.size() > 1)
-                // Count the overlaps
-                .count()
-            )
+public class NoMatterHowYouSliceIt implements Executable {
+    @Override
+    public String executePartOne() {
+        return String.valueOf(
+            parseInput(ChallengeHelper.readInputData(3))
+            // Get the List of List of List of String which represent the fabric
+            .getFabric()
+            // Stream it
+            .stream()
+            // Stream the inner list
+            .map(Collection::stream)
+            // Flat map the stream of stream into a single stream
+            .flatMap(x -> x)
+            // Filter to get only the point where the claim overlaps
+            .filter(x -> x.size() > 1)
+            // Count the overlaps
+            .count()
         );
     }
 
-    public static ParseContext parseInput(List<String> inputs) {
+    @Override
+    public String executePartTwo() {
+        // Get all the line in the file, as a list of string split on new line separator
+        List<String> inputs = ChallengeHelper.readInputData(3);
+
+        // parse the input exactly like part 1
+        ParseContext parseContext = parseInput(inputs);
+
+        // We will search for the id of the claim that doesn't overlap other
+        // So we iterate each claim
+        for (Claim claim : parseContext.getClaims()) {
+            // Walk the fabric space that the claim claimed
+            for (int i = 0; i < claim.getWidth(); i++) {
+                for (int j = 0; j < claim.getHeight(); j++) {
+                    // If one of the claim point is consist of more than one claim (ours) then abort
+                    // execution of the loop because this can't be this claim
+                    if (parseContext
+                        .getFabric()
+                        .get(claim.getLeftOffset() + i)
+                        .get(claim.getTopOffset() + j)
+                        .size() > 1) {
+                        return claim.getId();
+                    }
+                }
+            }
+        }
+
+        // Return statement because else it won't run
+        return "";
+    }
+
+    private ParseContext parseInput(List<String> inputs) {
         // Create a list of list of list of string which represent the fabric
         // The first list is for the width
         // The second list is for the height
@@ -108,5 +133,20 @@ public class Part01 {
         });
 
         return new ParseContext(fabric, claims);
+    }
+
+    @Value
+    private class Claim {
+        private String id;
+        private int leftOffset;
+        private int topOffset;
+        private int width;
+        private int height;
+    }
+
+    @Value
+    private class ParseContext {
+        private List<List<List<String>>> fabric;
+        private List<Claim> claims;
     }
 }

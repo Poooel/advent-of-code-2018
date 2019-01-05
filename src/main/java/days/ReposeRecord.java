@@ -1,17 +1,20 @@
-package day_4_repose_record;
+package days;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import launcher.ChallengeHelper;
+import launcher.Executable;
+import lombok.Value;
+
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Part01 {
-    public static void main(String[] args) throws Exception {
-        // Get all the line in the file, as a list of string split on new line separator
-        List<String> inputs = Files.readAllLines(Paths.get("input/day_04.input"));
+public class ReposeRecord implements Executable {
+    @Override
+    public String executePartOne() {
+        List<String> inputs = ChallengeHelper.readInputData(4);
 
         // We can just sort the inputs, with a default sorting because the date format
         // is sortable
@@ -25,11 +28,41 @@ public class Part01 {
         // Find the minute he most slept on
         int mostAsleepMinute = findMostAsleepMinute(mostAsleepGuard).getIndex();
 
-        // Print the answer
-        System.out.println(String.format("The answer is: %s", mostAsleepGuard.getId() * mostAsleepMinute));
+        return String.valueOf(mostAsleepGuard.getId() * mostAsleepMinute);
     }
 
-    static Map<Integer, Guard> parseInput(List<String> inputs) {
+    @Override
+    public String executePartTwo() {
+        List<String> inputs = ChallengeHelper.readInputData(4);
+
+        // We can just sort the inputs, with a default sorting because the date format
+        // is sortable
+        Collections.sort(inputs);
+
+        // Parse the input to get the guards
+        Map<Integer, Guard> guards = parseInput(inputs);
+
+        // Get a list of context for each guard
+        List<MaximumContext> maximumContexts = new ArrayList<>();
+
+        for (Guard guard : guards.values()) {
+            // Compute the most aslept minute for each guard
+            maximumContexts.add(findMostAsleepMinute(guard));
+        }
+
+        // Get the context with the most time asleep on the minute
+        MaximumContext maximumContext = maximumContexts
+            // Stream the list of context
+            .stream()
+            // Use max operation using the getMaximum of the MaximumContext object to compare
+            .max(Comparator.comparingInt(MaximumContext::getMaximum))
+            // Get because max return an optional
+            .get();
+
+        return String.valueOf(maximumContext.getGuardId() * maximumContext.getIndex());
+    }
+
+    private Map<Integer, Guard> parseInput(List<String> inputs) {
         Map<Integer, Guard> guards = new HashMap<>();
 
         for (int i = 0; i < inputs.size(); i++) {
@@ -44,11 +77,7 @@ public class Part01 {
                 int guardId = getGuardId(splitInput[1]);
 
                 // Initialize a new guard
-                Guard guard = new Guard();
-                // set its Id to the value we just found
-                guard.setId(guardId);
-                // initialize the shift to a new array list
-                guard.setShifts(new ArrayList<>());
+                Guard guard = new Guard(guardId, new ArrayList<>());
 
                 // if we already processed that guard before, replace the initialized guard
                 // with the one from the map
@@ -68,14 +97,14 @@ public class Part01 {
                     if (splitShift[1].contains("falls")) {
                         // So we get the date of when he fell asleep
                         beginningOfShift = splitShift[0];
-                    // If the input contains wakes, it means the guard just woke up
+                        // If the input contains wakes, it means the guard just woke up
                     } else if (splitShift[1].contains("wakes")) {
                         // So create a new shift with the previously acquired beginning date and
                         // the woke up date
                         shifts.add(
                             computeShift(beginningOfShift, splitShift[0])
                         );
-                    // If the input contains guard, it means we changed guard
+                        // If the input contains guard, it means we changed guard
                     } else if (splitShift[1].contains("Guard")) {
                         // Decrement the previous loop, so the outer loop will see what we just saw
                         i = j - 1;
@@ -93,7 +122,7 @@ public class Part01 {
         return guards;
     }
 
-    private static int getGuardId(String guardInfoString) {
+    private int getGuardId(String guardInfoString) {
         return Integer.parseInt(guardInfoString
             // Split it on the spaces
             // "Guard #10 begins shift" -> ["Guard", "#10", "begins", "shift"]
@@ -108,7 +137,7 @@ public class Part01 {
             .substring(1));
     }
 
-    private static Shift computeShift(String beginning, String end) {
+    private Shift computeShift(String beginning, String end) {
         String date = getDateFromShiftString(beginning);
         int beginningShift = getMinutesFromShiftString(beginning);
         int endShift = getMinutesFromShiftString(end);
@@ -125,7 +154,7 @@ public class Part01 {
         );
     }
 
-    private static Shift mergeShift(Shift firstShift, Shift secondShift) {
+    private Shift mergeShift(Shift firstShift, Shift secondShift) {
         List<Boolean> mergedMinutes = initializeMinutesArray();
         List<Boolean> firstMinutes = firstShift.getAsleepMinutes();
         List<Boolean> secondMinutes = secondShift.getAsleepMinutes();
@@ -144,7 +173,7 @@ public class Part01 {
         );
     }
 
-    private static List<Boolean> initializeMinutesArray() {
+    private List<Boolean> initializeMinutesArray() {
         List<Boolean> minutes = new ArrayList<>();
 
         // Initialize the list with 60 minutes of awake guard
@@ -156,25 +185,25 @@ public class Part01 {
         return minutes;
     }
 
-    private static int getMinutesFromShiftString(String shiftString) {
+    private int getMinutesFromShiftString(String shiftString) {
         return Integer.parseInt(
             shiftString
-            // Split on the space
-            // "[1518-11-01 00:00]" -> ["[1518-11-01", "00:00]"]
-            .split(" ")
-            // Take the second part where the time is
-            [1]
-            // Split on the semi-colon
-            // "00:00" -> ["00", "00"]
-            .split(":")
-            // Takes the second part where the minutes are
-            [1]
-            // Remove the "]"
-            .substring(0, 2)
+                // Split on the space
+                // "[1518-11-01 00:00]" -> ["[1518-11-01", "00:00]"]
+                .split(" ")
+                // Take the second part where the time is
+                [1]
+                // Split on the semi-colon
+                // "00:00" -> ["00", "00"]
+                .split(":")
+                // Takes the second part where the minutes are
+                [1]
+                // Remove the "]"
+                .substring(0, 2)
         );
     }
 
-    private static String getDateFromShiftString(String shiftString) {
+    private String getDateFromShiftString(String shiftString) {
         return shiftString
             // Split on the space
             // "[1518-11-01 00:00]" -> ["[1518-11-01", "00:00]"]
@@ -185,7 +214,7 @@ public class Part01 {
             .substring(1);
     }
 
-    private static int getIndexOfSameDateShift(Shift shiftToCompare, List<Shift> shifts) {
+    private int getIndexOfSameDateShift(Shift shiftToCompare, List<Shift> shifts) {
         // Find two shift with the same date
         for (int i = 0; i < shifts.size(); i++) {
             // If the two shift are equals, continue because we are comparing to itself
@@ -203,7 +232,7 @@ public class Part01 {
         return -1;
     }
 
-    private static List<Shift> mergeShifts(List<Shift> shifts) {
+    private List<Shift> mergeShifts(List<Shift> shifts) {
         // Initialize to true to enter the loop at least one time,
         // could have used a do...while() instead
         boolean mergedSomething = true;
@@ -232,7 +261,7 @@ public class Part01 {
         return shifts;
     }
 
-    private static Guard findMostAsleepGuard(Map<Integer, Guard> guards) {
+    private Guard findMostAsleepGuard(Map<Integer, Guard> guards) {
         // Initialize the maximum as the smallest value possible to be sure we don't miss
         // any value, could have taken the first value of the list too
         int maximum = Integer.MIN_VALUE;
@@ -269,7 +298,7 @@ public class Part01 {
         return mostAsleepGuard;
     }
 
-    static MaximumContext findMostAsleepMinute(Guard guard) {
+    private MaximumContext findMostAsleepMinute(Guard guard) {
         // Initialize a list of counter of minutes, at the beginning,
         // every minute is equal to 0, because we haven't processed the sleeping time of the
         // guard yet
@@ -305,5 +334,24 @@ public class Part01 {
         // Return the result as an object to get multiple informations instead
         // of copy pasting this function with a different return value
         return new MaximumContext(index, maximum, guard.getId());
+    }
+
+    @Value
+    private class Guard {
+        private int id;
+        private List<Shift> shifts;
+    }
+
+    @Value
+    private class MaximumContext {
+        private int index;
+        private int maximum;
+        private int guardId;
+    }
+
+    @Value
+    private class Shift {
+        private List<Boolean> asleepMinutes;
+        private String date;
     }
 }
