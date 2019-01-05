@@ -1,12 +1,6 @@
 package launcher;
 
-import days.Day5_AlchemicalReduction;
-import days.Day1_ChronalCalibration;
-import days.Day6_ChronalCoordinates;
-import days.Day2_InventoryManagementSystem;
-import days.Day3_NoMatterHowYouSliceIt;
-import days.Day0_NotDoneYet;
-import days.Day4_ReposeRecord;
+import days.*;
 import lombok.SneakyThrows;
 
 public class Launcher {
