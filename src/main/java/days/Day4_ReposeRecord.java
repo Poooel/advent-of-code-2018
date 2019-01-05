@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ReposeRecord implements Executable {
+public class Day4_ReposeRecord implements Executable {
     @Override
     public String executePartOne() {
         List<String> inputs = ChallengeHelper.readInputData(4);

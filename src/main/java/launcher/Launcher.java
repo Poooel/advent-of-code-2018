@@ -1,12 +1,12 @@
 package launcher;
 
-import days.AlchemicalReduction;
-import days.ChronalCalibration;
-import days.ChronalCoordinates;
-import days.InventoryManagementSystem;
-import days.NoMatterHowYouSliceIt;
-import days.NotDoneYet;
-import days.ReposeRecord;
+import days.Day5_AlchemicalReduction;
+import days.Day1_ChronalCalibration;
+import days.Day6_ChronalCoordinates;
+import days.Day2_InventoryManagementSystem;
+import days.Day3_NoMatterHowYouSliceIt;
+import days.Day0_NotDoneYet;
+import days.Day4_ReposeRecord;
 import lombok.SneakyThrows;
 
 public class Launcher {
@@ -52,19 +52,19 @@ public class Launcher {
     private static Executable getCorrespondingExecutableDay(int day) {
         switch (day) {
             case 1:
-                return new ChronalCalibration();
+                return new Day1_ChronalCalibration();
             case 2:
-                return new InventoryManagementSystem();
+                return new Day2_InventoryManagementSystem();
             case 3:
-                return new NoMatterHowYouSliceIt();
+                return new Day3_NoMatterHowYouSliceIt();
             case 4:
-                return new ReposeRecord();
+                return new Day4_ReposeRecord();
             case 5:
-                return new AlchemicalReduction();
+                return new Day5_AlchemicalReduction();
             case 6:
-                return new ChronalCoordinates();
+                return new Day6_ChronalCoordinates();
             default:
-                return new NotDoneYet();
+                return new Day0_NotDoneYet();
         }
     }
 }

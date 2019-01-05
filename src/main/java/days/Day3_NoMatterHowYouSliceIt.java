@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class NoMatterHowYouSliceIt implements Executable {
+public class Day3_NoMatterHowYouSliceIt implements Executable {
     @Override
     public String executePartOne() {
         return String.valueOf(

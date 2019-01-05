@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class TheSumOfItsParts implements Executable {
+public class Day7_TheSumOfItsParts implements Executable {
     @Override
     public String executePartOne() {
         List<String> inputs = ChallengeHelper.readInputData(7);

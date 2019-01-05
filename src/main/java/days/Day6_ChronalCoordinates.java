@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ChronalCoordinates implements Executable {
+public class Day6_ChronalCoordinates implements Executable {
     @Override
     public String executePartOne() {
         List<String> inputs = ChallengeHelper.readInputData(6);

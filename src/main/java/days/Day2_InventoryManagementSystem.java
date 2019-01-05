@@ -7,7 +7,7 @@ import launcher.Executable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InventoryManagementSystem implements Executable {
+public class Day2_InventoryManagementSystem implements Executable {
     @Override
     public String executePartOne() {
         List<String> inputs = ChallengeHelper.readInputData(2);

@@ -6,7 +6,7 @@ import launcher.Executable;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class AlchemicalReduction implements Executable {
+public class Day5_AlchemicalReduction implements Executable {
     @Override
     public String executePartOne() {
         List<String> inputs = ChallengeHelper.readInputData(5);

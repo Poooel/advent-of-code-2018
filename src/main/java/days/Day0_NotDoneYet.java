@@ -2,7 +2,7 @@ package days;
 
 import launcher.Executable;
 
-public class NotDoneYet implements Executable {
+public class Day0_NotDoneYet implements Executable {
     @Override
     public String executePartOne() {
         return "Part 1 of this day has not been done, yet.";
