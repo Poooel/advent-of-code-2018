@@ -61,6 +61,8 @@ public class Launcher {
                 return new Day7_TheSumOfItsParts();
             case 8:
                 return new Day8_MemoryManeuver();
+            case 9:
+                return new Day9_MarbleMania();
             default:
                 return new Day0_NotDoneYet();
         }
