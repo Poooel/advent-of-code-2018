@@ -59,6 +59,8 @@ public class Launcher {
                 return new Day6_ChronalCoordinates();
             case 7:
                 return new Day7_TheSumOfItsParts();
+            case 8:
+                return new Day8_MemoryManeuver();
             default:
                 return new Day0_NotDoneYet();
         }
