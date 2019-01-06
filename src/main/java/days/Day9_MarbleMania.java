@@ -2,37 +2,39 @@ package days;
 
 import launcher.ChallengeHelper;
 import launcher.Executable;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Value;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Day9_MarbleMania implements Executable {
-    private int marbleCounter = 1;
-
     @Override
     public String executePartOne() {
         List<String> inputs = ChallengeHelper.readInputData(9);
         MarbleInitialParameters marbleInitialParameters = parseInput(inputs);
-        MarbleGameContext marbleGameContext = playMarbleGame(marbleInitialParameters);
-        Player bestPlayer = findPlayerWithHighestScore(marbleGameContext.getPlayers());
-        return String.valueOf(bestPlayer.getScore());
+        return String.valueOf(
+            playMarbleGame(
+                marbleInitialParameters.getNumberOfMarbles(),
+                marbleInitialParameters.getNumberOfPlayers(),
+                1
+            )
+        );
     }
 
     @Override
     public String executePartTwo() {
-        return null;
-    }
-
-    private Player findPlayerWithHighestScore(List<Player> players) {
-        return players
-            .stream()
-            .max(Comparator.comparingInt(Player::getScore))
-            .get();
+        List<String> inputs = ChallengeHelper.readInputData(9);
+        MarbleInitialParameters marbleInitialParameters = parseInput(inputs);
+        return String.valueOf(
+            playMarbleGame(
+                marbleInitialParameters.getNumberOfMarbles(),
+                marbleInitialParameters.getNumberOfPlayers(),
+                100
+            )
+        );
     }
 
     private MarbleInitialParameters parseInput(List<String> inputs) {
@@ -53,171 +55,43 @@ public class Day9_MarbleMania implements Executable {
         return new MarbleInitialParameters(numberOfMarbles, numberOfPlayers);
     }
 
-    private MarbleGameContext playMarbleGame(MarbleInitialParameters marbleInitialParameters) {
-        LinkedList<Marble> game = new LinkedList<>();
-        List<Player> players = initializePlayerPool(marbleInitialParameters.getNumberOfPlayers());
-        PlayerPointer playerPointer = new PlayerPointer(players);
-        Marble currentMarble = new Marble(0, 0);
+    private int playMarbleGame(int marbles, int players, int multiplicator) {
+        List<Integer> game = new ArrayList<>(marbles * multiplicator);
+        Map<Integer, Integer> leaderboard = new HashMap<>();
 
-        // Place first two marbles
-        // Place first marble
-        game.offer(currentMarble);
-        // Place second marble
-        currentMarble = new Marble(1, 1);
-        game.offer(currentMarble);
-        playerPointer.nextPlayer();
+        // For debugging
+        double percentage = 0;
 
-        // Start at 2 because we already placed 2 marbles
-        for (int i = 1; i < marbleInitialParameters.getNumberOfMarbles(); i++) {
-            marbleCounter++;
-            currentMarble = placeMarble(currentMarble, playerPointer.getCurrentPlayer(), game);
-            playerPointer.nextPlayer();
-        }
+        for (int i = 0; i < (marbles * multiplicator) + 1; i++) {
+            // --- For debugging ---
+            float currentPercentage = i * 100f / (marbles * multiplicator);
 
-        return new MarbleGameContext(game, players);
-    }
+            if (Math.round(currentPercentage) != percentage) {
+                System.out.println(percentage + "% done.");
+                percentage = Math.round(currentPercentage);
+            }
+            // --- For debugging ---
 
-    private Marble placeMarble(
-        Marble currentMarble,
-        Player currentPlayer,
-        LinkedList<Marble> game
-    ) {
-        Marble marbleToPlace = computeNextMarble(currentMarble, game);
-
-        if (marbleToPlace.getNumber() % 23 == 0) {
-            currentPlayer.addToScore(marbleToPlace.getNumber());
-            Marble toRemoveMarble = getMarble7MarblesCounterClockWise(currentMarble, game);
-            currentPlayer.addToScore(toRemoveMarble.getNumber());
-            Marble newCurrentMarble = getAdjacentClockWiseMarble(toRemoveMarble, game);
-            game.remove(toRemoveMarble.getIndex());
-            return newCurrentMarble;
-        } else {
-            game.add(marbleToPlace.getIndex(), marbleToPlace);
-            return marbleToPlace;
-        }
-    }
-
-    private Marble computeNextMarble(
-        Marble currentMarble,
-        LinkedList<Marble> game
-    ) {
-        int currentMarbleIndex = game.indexOf(currentMarble);
-        int gameSize = game.size();
-        int pointer = currentMarbleIndex;
-
-        for (int i = 0; i < 2; i++) {
-            pointer++;
-            if (pointer == gameSize + 1) {
-                pointer = 1;
+            if (i != 0 && i % 23 == 0) {
+                Collections.rotate(game, 7);
+                leaderboard.merge(
+                    i % players,
+                    i + game.remove(game.size() - 1),
+                    Integer::sum
+                );
+                Collections.rotate(game, -1);
+            } else {
+                Collections.rotate(game, -1);
+                game.add(i);
             }
         }
 
-        return new Marble(pointer, marbleCounter);
-    }
-
-    private Marble getMarble7MarblesCounterClockWise(
-        Marble currentMarble,
-        LinkedList<Marble> game
-    ) {
-        int currentMarbleIndex = game.indexOf(currentMarble);
-        int gameSize = game.size();
-        int pointer = currentMarbleIndex;
-
-        for (int i = 0; i < 7; i++) {
-            pointer--;
-            if (pointer == -1) {
-                pointer = gameSize - 1;
-            }
-        }
-
-        return new Marble(pointer, game.get(pointer).getNumber());
-    }
-
-    private Marble getAdjacentClockWiseMarble(
-        Marble currentMarble,
-        LinkedList<Marble> game
-    ) {
-        int currentMarbleIndex = 0;
-
-        for (int i = 0; i < game.size(); i++) {
-            if (game.get(i).getNumber() == currentMarble.getNumber()) {
-                currentMarbleIndex = i;
-                break;
-            }
-        }
-
-        int gameSize = game.size();
-        int pointer = currentMarbleIndex;
-
-        pointer++;
-        if (pointer == gameSize + 1) {
-            pointer = 0;
-        }
-
-        return game.get(pointer);
-    }
-
-    private List<Player> initializePlayerPool(int numberOfPlayers) {
-        List<Player> players = new ArrayList<>();
-
-        for (int i = 0; i < numberOfPlayers; i++) {
-            players.add(
-                new Player(i, 0)
-            );
-        }
-
-        return players;
+        return leaderboard.values().stream().mapToInt(Integer::intValue).max().getAsInt();
     }
 
     @Value
     private class MarbleInitialParameters {
         private int numberOfMarbles;
         private int numberOfPlayers;
-    }
-
-    @Value
-    private class MarbleGameContext {
-        private LinkedList<Marble> game;
-        private List<Player> players;
-    }
-
-    @Data
-    @AllArgsConstructor
-    private class Player {
-        private int number;
-        private int score;
-
-        void addToScore(int toAdd) {
-            score += toAdd;
-        }
-    }
-
-    @Data
-    private class PlayerPointer {
-        private List<Player> players;
-        private Player currentPlayer;
-        private int playerIndex;
-
-        PlayerPointer(List<Player> players) {
-            this.players = players;
-            this.playerIndex = 0;
-            this.currentPlayer = players.get(playerIndex);
-        }
-
-        void nextPlayer() {
-            playerIndex++;
-
-            if (playerIndex >= players.size()) {
-                playerIndex = 0;
-            }
-
-            currentPlayer = players.get(playerIndex);
-        }
-    }
-
-    @Value
-    private class Marble {
-        private int index;
-        private int number;
     }
 }
