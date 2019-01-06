@@ -211,7 +211,7 @@ public class Day7_TheSumOfItsParts implements Executable {
     }
 
     private WorkContext doWork(Queue<Job> workQueue) {
-        // The list of job finished, one or more may finished at the same time
+        // The list of job finished, one or more may have finished at the same time
         // so we store them into a list
         List<Node> finishedJob = new ArrayList<>();
         // The time it took to finish the jobs
