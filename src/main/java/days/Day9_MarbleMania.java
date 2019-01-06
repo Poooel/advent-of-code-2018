@@ -58,12 +58,14 @@ public class Day9_MarbleMania implements Executable {
         // Initialize the rotating queue
         RotatingQueue<Integer> game = new RotatingQueue<>();
         // Keep the leaderboard of players
+        // Had to use a Long for part 2, but there was no StackOverflow so it's weird
         Map<Integer, Long> leaderboard = new HashMap<>();
 
         // Solution from
         // https://www.reddit.com/r/adventofcode/comments/a4i97s/2018_day_9_solutions/ebepyc7
 
-        // We add one because else there will be one iteration missing
+        // We add two to the number of iterations because (for some unknown reasons, yet)
+        // there is two iterations missing
         for (int i = 0; i < (marbles * multiplicator) + 2; i++) {
             // If i is not zero and a multiple of 23 then do special rule
             if (i != 0 && i % 23 == 0) {
@@ -107,31 +109,31 @@ public class Day9_MarbleMania implements Executable {
         private int numberOfPlayers;
     }
 
-    @Data
-    private class QueueNode<T> {
-        private QueueNode head;
-        private QueueNode tail;
-        private T value;
-
-        QueueNode(T value) {
-            this.head = null;
-            this.tail = null;
-            this.value = value;
-        }
-    }
-
     // Implemented my own RotatingQueue (this may not be the correct name) because
     // it appears in Java this doesn't exists. The queue only handle push, pop and rotate.
     // This is a true double linked list, each node has no other info than the previous node,
     // the next node, and the value it holds. Thus making it faster than the Java implementation
     // LinkedList.
     private class RotatingQueue<T> {
-        private QueueNode<T> head;
-        private QueueNode<T> tail;
+        private QueueNode head;
+        private QueueNode tail;
+
+        @Data
+        private class QueueNode {
+            private QueueNode head;
+            private QueueNode tail;
+            private T value;
+
+            QueueNode(T value) {
+                this.head = null;
+                this.tail = null;
+                this.value = value;
+            }
+        }
 
         void push(T value) {
             // Create a node with the given value
-            QueueNode<T> node = new QueueNode<>(value);
+            QueueNode node = new QueueNode(value);
 
             // If the queue has just been created
             if (head == null && tail == null) {
