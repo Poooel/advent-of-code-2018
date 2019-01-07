@@ -6,7 +6,7 @@ import lombok.SneakyThrows;
 public class Launcher {
     @SneakyThrows
     public static void main(String[] args) {
-        System.out.println("Welcome to the Advent of Code 2018.");
+        System.out.println("Welcome to the Advent of Code 2018!");
 
         System.out.println("Choose a day to begin: (1-25)");
         int choosenDay = LauncherHelper.getValidIntegerInput(
@@ -63,6 +63,8 @@ public class Launcher {
                 return new Day8_MemoryManeuver();
             case 9:
                 return new Day9_MarbleMania();
+            case 10:
+                return new Day10_TheStarsAlign();
             default:
                 return new Day0_NotDoneYet();
         }
