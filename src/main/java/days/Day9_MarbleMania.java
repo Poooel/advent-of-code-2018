@@ -59,18 +59,27 @@ public class Day9_MarbleMania implements Executable {
         // Initialize the circular queue
         CircularQueue<Integer> game = new CircularQueue<>();
         // Keep the leaderboard of players
-        // Had to use a Long for part 2, but there was no StackOverflow so it's weird
+        // Had to use a Long for part 2, but there was no StackOverflow so it's weird only clue
+        // was that it would return a negative value
         Map<Integer, Long> leaderboard = new HashMap<>();
 
-        // Solution from
+        // Solution from reddit, because mine was too convoluted and was too slow due to the use
+        // of the wrong datastructure. This one is concise and with the help of the homemade
+        // circular queue is much better than the old one.
         // https://www.reddit.com/r/adventofcode/comments/a4i97s/2018_day_9_solutions/ebepyc7
 
-        // We add two to the number of iterations because (for some unknown reasons, yet)
-        // there is two iterations missing
+        // We add one to the number of iterations because else one marble will be missing from
+        // the game. The marbles number is: 71852. So by doing a
+        // for loop like this (with multiplicator equal to 1):
+        // for (int i = 0; i < (marbles * multiplicator); i++)
+        // We would go through marble: 0 to 71851. We would have 71852 marbles but that's not
+        // what we want. We want to go through marble: 0 to 71852.
+        // So we can either add one to the number of iterations or use a less or equal operator.
+        // The two should be valid.
         for (int i = 0; i < (marbles * multiplicator) + 1; i++) {
             // If i is not zero and a multiple of 23 then do special rule
             if (i != 0 && i % 23 == 0) {
-                // Rotate the collection by 7 anti clock wise
+                // Rotate the queue by 7 anti clock wise
                 game.rotate(7);
                 // Add the score to the leaderboard for the player
                 // we use merge so if there is no mapping already, it creates one
@@ -80,12 +89,15 @@ public class Day9_MarbleMania implements Executable {
                     i + new Long(game.pop()),
                     Long::sum
                 );
-                // Rotate the collection back to put it in its normal state
+                // Rotate the queue back to put it in the desired state
                 game.rotate(-1);
             } else {
-                // Rotate the collection to insert next element
+                // Rotate the queue to insert next element
+                // By rotating the queue, we can effectively just insert items at the end of the
+                // queue instead of trying to figure out where we should insert them in the queue
+                // it's more effective.
                 game.rotate(-1);
-                // Add the element to the end of the collection
+                // Add the element to the end of the queue
                 game.push(i);
             }
         }
