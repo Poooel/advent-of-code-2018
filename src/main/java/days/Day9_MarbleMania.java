@@ -179,6 +179,9 @@ public class Day9_MarbleMania implements Executable {
                 head = node;
                 tail = node;
 
+                // As there is only one node for the moment
+                // the node is linked back to itself, the head's tail is the tail
+                // and the tail's head is the head, but the head and the tail are the same
                 head.setTail(tail);
                 tail.setHead(head);
             } else if (head != null && tail != null) {
@@ -227,19 +230,30 @@ public class Day9_MarbleMania implements Executable {
 
         @Override
         public String toString() {
+            // Create a StringBuilder instace
             StringBuilder stringBuilder = new StringBuilder();
+            // Append the name of the object for easier reading
             stringBuilder.append("CircularQueue: ");
+            // Create a list which will contains all the values of the nodes as strings
             List<String> nodes = new ArrayList<>();
 
+            // Initialize the beginning node as the head
             QueueNode currentNode = head;
 
             do {
+                // Add the node's value to the list
                 nodes.add(currentNode.getValue().toString());
+                // The next node is the tail of the current node
                 currentNode = currentNode.getTail();
+            // Do a full circle, when currentNode is equal to the head it means
+            // we got back to the beginning
             } while (currentNode != head);
 
+            // Append all the values to the stringBuilder using String.join to use a delimiter
+            // between them
             stringBuilder.append(String.join(" -> ", nodes));
 
+            // Return the string representation of the stringBuilder
             return stringBuilder.toString();
         }
     }
