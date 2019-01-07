@@ -5,6 +5,7 @@ import launcher.Executable;
 import lombok.Data;
 import lombok.Value;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,8 +56,8 @@ public class Day9_MarbleMania implements Executable {
     }
 
     private long playMarbleGame(int marbles, int players, int multiplicator) {
-        // Initialize the rotating queue
-        RotatingQueue<Integer> game = new RotatingQueue<>();
+        // Initialize the circular queue
+        CircularQueue<Integer> game = new CircularQueue<>();
         // Keep the leaderboard of players
         // Had to use a Long for part 2, but there was no StackOverflow so it's weird
         Map<Integer, Long> leaderboard = new HashMap<>();
@@ -66,11 +67,11 @@ public class Day9_MarbleMania implements Executable {
 
         // We add two to the number of iterations because (for some unknown reasons, yet)
         // there is two iterations missing
-        for (int i = 0; i < (marbles * multiplicator) + 2; i++) {
+        for (int i = 0; i < (marbles * multiplicator) + 1; i++) {
             // If i is not zero and a multiple of 23 then do special rule
             if (i != 0 && i % 23 == 0) {
                 // Rotate the collection by 7 anti clock wise
-                game.rotate(-7);
+                game.rotate(7);
                 // Add the score to the leaderboard for the player
                 // we use merge so if there is no mapping already, it creates one
                 // and put the value, else it just merge the values
@@ -80,10 +81,10 @@ public class Day9_MarbleMania implements Executable {
                     Long::sum
                 );
                 // Rotate the collection back to put it in its normal state
-                game.rotate(1);
+                game.rotate(-1);
             } else {
                 // Rotate the collection to insert next element
-                game.rotate(1);
+                game.rotate(-1);
                 // Add the element to the end of the collection
                 game.push(i);
             }
@@ -109,12 +110,12 @@ public class Day9_MarbleMania implements Executable {
         private int numberOfPlayers;
     }
 
-    // Implemented my own RotatingQueue (this may not be the correct name) because
+    // Implemented my own CircularQueue (this may not be the correct name) because
     // it appears in Java this doesn't exists. The queue only handle push, pop and rotate.
     // This is a true double linked list, each node has no other info than the previous node,
     // the next node, and the value it holds. Thus making it faster than the Java implementation
     // LinkedList.
-    private class RotatingQueue<T> {
+    private class CircularQueue<T> {
         private QueueNode head;
         private QueueNode tail;
 
@@ -125,9 +126,34 @@ public class Day9_MarbleMania implements Executable {
             private T value;
 
             QueueNode(T value) {
+                // For a new node initialize the head and tail to null
                 this.head = null;
                 this.tail = null;
                 this.value = value;
+            }
+
+            void link(QueueNode newNode) {
+                // The new node's head is the current node
+                newNode.setHead(this);
+                // The new node's tail is the tail of the current node
+                newNode.setTail(this.tail);
+
+                // The head of the tail of the current node is the new node
+                this.tail.setHead(newNode);
+                // The tail of the current node is now the new node
+                this.tail = newNode;
+            }
+
+            T unlink() {
+                // The tail of the current node's head is the tail of the current node
+                this.head.setTail(this.tail);
+                // The head of the current node's tail is the head of the current node
+                this.tail.setHead(this.head);
+
+                this.head = null;
+                this.tail = null;
+
+                return this.value;
             }
         }
 
@@ -144,37 +170,26 @@ public class Day9_MarbleMania implements Executable {
                 head.setTail(tail);
                 tail.setHead(head);
             } else if (head != null && tail != null) {
-                // Set the new node's head to the current tail
-                node.setHead(tail);
-                // Set the tail of the tail to the new node
-                tail.setTail(node);
+                // Link the tail and the new node
+                tail.link(node);
                 // Set the tail to the new node
                 tail = node;
             }
         }
 
         T pop() {
-            // Get the value of the removed node
-            T value = tail.getValue();
-            // Put the head of the old tail in a temp node
-            QueueNode newTail = tail.getHead();
-
-            // Dereference the old tail
-            tail.setHead(null);
-
-            // Set the new tail as the head of the previous tail
-            tail = newTail;
-            // The tail has no tail
-            tail.setTail(null);
-
-            // Return the value of the node removed
-            return value;
+            // Store the node which will be removed
+            QueueNode toBeRemoved = tail;
+            // Set the new tail to be the head of the current tail
+            tail = toBeRemoved.getHead();
+            // Unlink the old tail
+            return toBeRemoved.unlink();
         }
 
         /**
          * Rotate the queue with the degree given.
-         * @param degrees If degrees is greater than 0 then it will rotate clockwise,
-         *                if degrees is less than 0 then it will rotate anti-clockwise
+         * @param degrees If degrees is greater than 0 then it will rotate anti-clockwise,
+         *                if degrees is less than 0 then it will rotate clockwise
          */
         void rotate(int degrees) {
             // If the list is empty then do nothing
@@ -182,54 +197,38 @@ public class Day9_MarbleMania implements Executable {
                 return;
             }
             if (degrees > 0) {
+                // To rotate anti-clockwise we get the head of the head and tail
+                // if you would represent the circle as a line, it would go to the left
                 for (int i = 0; i < degrees; i++) {
-                    // The new head is the tail of the current head
-                    QueueNode newHead = head.getTail();
-                    // The new tail is the current head
-                    QueueNode newTail = head;
-
-                    // The new tail's head is the old tail
-                    newTail.setHead(tail);
-                    // The new tail's tail is null
-                    newTail.setTail(null);
-
-                    // The old tail's tail is now the new tail
-                    tail.setTail(newTail);
-
-                    // Assign the new tail to the tail
-                    tail = newTail;
-
-                    // The new head's head is null
-                    newHead.setHead(null);
-
-                    // Assign the new head to the head
-                    head = newHead;
+                    head = head.getHead();
+                    tail = tail.getHead();
                 }
             } else if (degrees < 0) {
+                // To rotate clockwise we get the tail of the head and tail
+                // if you would represent the circle as a line, it would go to the right
                 for (int i = 0; i < Math.abs(degrees); i++) {
-                    // The new head is the tail of the current head
-                    QueueNode newHead = tail;
-                    // The new tail is the current head
-                    QueueNode newTail = tail.getHead();
-
-                    // The new head's head is null
-                    newHead.setHead(null);
-                    // The new head's tail is the old head
-                    newHead.setTail(head);
-
-                    // The old head's head is now the new head
-                    head.setHead(newHead);
-
-                    // Assign the new head to the head
-                    head = newHead;
-
-                    // The new tail's tail is null
-                    newTail.setTail(null);
-
-                    // Assign the new tail to the tail
-                    tail = newTail;
+                    head = head.getTail();
+                    tail = tail.getTail();
                 }
             }
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("CircularQueue: ");
+            List<String> nodes = new ArrayList<>();
+
+            QueueNode currentNode = head;
+
+            do {
+                nodes.add(currentNode.getValue().toString());
+                currentNode = currentNode.getTail();
+            } while (currentNode != head);
+
+            stringBuilder.append(String.join(" -> ", nodes));
+
+            return stringBuilder.toString();
         }
     }
 }
