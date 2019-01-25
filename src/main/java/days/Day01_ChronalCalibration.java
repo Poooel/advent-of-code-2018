@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class Day1_ChronalCalibration implements Executable {
+public class Day01_ChronalCalibration implements Executable {
     @Override
     public String executePartOne() {
         return String.valueOf(

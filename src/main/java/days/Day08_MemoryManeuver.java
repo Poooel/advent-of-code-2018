@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Day8_MemoryManeuver implements Executable {
+public class Day08_MemoryManeuver implements Executable {
     @Override
     public String executePartOne() {
         List<String> inputs = ChallengeHelper.readInputData(8);

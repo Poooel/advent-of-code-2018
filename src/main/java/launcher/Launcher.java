@@ -46,27 +46,27 @@ public class Launcher {
     private static Executable getCorrespondingExecutableDay(int day) {
         switch (day) {
             case 1:
-                return new Day1_ChronalCalibration();
+                return new Day01_ChronalCalibration();
             case 2:
-                return new Day2_InventoryManagementSystem();
+                return new Day02_InventoryManagementSystem();
             case 3:
-                return new Day3_NoMatterHowYouSliceIt();
+                return new Day03_NoMatterHowYouSliceIt();
             case 4:
-                return new Day4_ReposeRecord();
+                return new Day04_ReposeRecord();
             case 5:
-                return new Day5_AlchemicalReduction();
+                return new Day05_AlchemicalReduction();
             case 6:
-                return new Day6_ChronalCoordinates();
+                return new Day06_ChronalCoordinates();
             case 7:
-                return new Day7_TheSumOfItsParts();
+                return new Day07_TheSumOfItsParts();
             case 8:
-                return new Day8_MemoryManeuver();
+                return new Day08_MemoryManeuver();
             case 9:
-                return new Day9_MarbleMania();
+                return new Day09_MarbleMania();
             case 10:
                 return new Day10_TheStarsAlign();
             default:
-                return new Day0_NotDoneYet();
+                return new Day00_NotDoneYet();
         }
     }
 }

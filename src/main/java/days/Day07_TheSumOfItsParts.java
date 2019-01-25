@@ -16,7 +16,7 @@ import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.stream.Collectors;
 
-public class Day7_TheSumOfItsParts implements Executable {
+public class Day07_TheSumOfItsParts implements Executable {
     @Override
     public String executePartOne() {
         List<String> inputs = ChallengeHelper.readInputData(7);
