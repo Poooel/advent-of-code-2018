@@ -65,6 +65,8 @@ public class Launcher {
                 return new Day09_MarbleMania();
             case 10:
                 return new Day10_TheStarsAlign();
+            case 11:
+                return new Day11_ChronalCharge();
             default:
                 return new Day00_NotDoneYet();
         }
