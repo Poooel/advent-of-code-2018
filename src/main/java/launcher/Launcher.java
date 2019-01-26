@@ -67,6 +67,8 @@ public class Launcher {
                 return new Day10_TheStarsAlign();
             case 11:
                 return new Day11_ChronalCharge();
+            case 12:
+                return new Day12_SubterraneanSustainability();
             default:
                 return new Day00_NotDoneYet();
         }
