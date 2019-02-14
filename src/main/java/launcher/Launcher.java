@@ -69,6 +69,8 @@ public class Launcher {
                 return new Day11_ChronalCharge();
             case 12:
                 return new Day12_SubterraneanSustainability();
+            case 13:
+                return new Day13_MineCartMadness();
             default:
                 return new Day00_NotDoneYet();
         }
