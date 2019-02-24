@@ -71,6 +71,8 @@ public class Launcher {
                 return new Day12_SubterraneanSustainability();
             case 13:
                 return new Day13_MineCartMadness();
+            case 14:
+                return new Day14_ChocolateCharts();
             default:
                 return new Day00_NotDoneYet();
         }
