@@ -3,9 +3,8 @@ plugins {
     id 'net.ltgt.apt' version '0.19'
 }
 
-version '1.0-SNAPSHOT'
-
-sourceCompatibility = 1.8
+version 'v1'
+sourceCompatibility = 11
 
 repositories {
     mavenCentral()
