@@ -51,7 +51,7 @@ public class Day14_ChocolateCharts implements Executable {
             gameState.getRecipes().add(newRecipe);
         }
 
-        // Move elf1 to the its next current recipe
+        // Move elf1 to its next current recipe
         gameState.setElf1(
             gameState.getElf1()
                 // Using modulo here to avoid handling a loop
@@ -130,8 +130,7 @@ public class Day14_ChocolateCharts implements Executable {
      * @return A string containing all the ints from the list joined together without a separator
      */
     private String convertListToString(List<Integer> ints) {
-        List<String> resultAsString = ints.stream().map(String::valueOf).collect(Collectors.toList());
-        return String.join("", resultAsString);
+        return ints.stream().map(String::valueOf).collect(Collectors.joining());
     }
 
     /**
@@ -143,13 +142,13 @@ public class Day14_ChocolateCharts implements Executable {
      */
     private List<Integer> convertIntToListOfDigits(int integer) {
         String temp = Integer.toString(integer);
-        Integer[] newGuess = new Integer[temp.length()];
-        for (int i = 0; i < temp.length(); i++)
-        {
-            newGuess[i] = temp.charAt(i) - '0';
+        Integer[] digits = new Integer[temp.length()];
+
+        for (int i = 0; i < temp.length(); i++) {
+            digits[i] = temp.charAt(i) - '0';
         }
 
-        return Arrays.asList(newGuess);
+        return Arrays.asList(digits);
     }
 
     @Data
