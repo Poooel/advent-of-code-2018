@@ -73,6 +73,8 @@ public class Launcher {
                 return new Day13_MineCartMadness();
             case 14:
                 return new Day14_ChocolateCharts();
+            case 15:
+                return new Day15_BeverageBandits();
             default:
                 return new Day00_NotDoneYet();
         }
