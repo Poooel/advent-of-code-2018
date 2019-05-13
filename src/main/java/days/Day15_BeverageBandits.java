@@ -21,11 +21,15 @@ public class Day15_BeverageBandits implements Executable {
         List<String> input = ChallengeHelper.readInputData(15);
         GameState gameState = parseInitialGameState(input);
         return String.format("The result of the combat is %d", play(gameState));
+        // This solution doesn't actually work for some obscure reasons
+        // Got the solution thanks to https://lamperi.name/aoc/
     }
 
     @Override
     public String executePartTwo() {
         return null;
+        // This solution doesn't actually work for some obscure reasons
+        // Got the solution thanks to https://lamperi.name/aoc/
     }
 
     private int play(GameState gameState) {
@@ -74,26 +78,40 @@ public class Day15_BeverageBandits implements Executable {
     }
 
     private void moveCharacter(GameState gameState, Character character) {
+        // Target open spots
         List<Coordinates> openSpots = identifyOpenSpots(character, gameState);
+        // Character open spots
+        List<Coordinates> characterOpenSpots = identifyCharacterOpenSpots(character, gameState);
 
+        // If no target can be reached
         if (openSpots.isEmpty()) {
             return;
         }
 
+        // If the character has no open spot to move to (around him)
+        if (characterOpenSpots.isEmpty()) {
+            return;
+        }
+
+        // Map of int and list of list
+        // int is the length of the path
+        // list of list store the path to the goal, list of list because there can be multiple path for a same length
         java.util.Map<Integer, List<List<Coordinates>>> pathsToTarget = new HashMap<>();
 
         for (Coordinates openSpot : openSpots) {
-            List<Coordinates> path = findShortestPath(character.getCoordinates(), openSpot, gameState);
+            for (Coordinates characterOpenSpot : characterOpenSpots) {
+                List<Coordinates> path = findShortestPathWithAStar(characterOpenSpot, openSpot, gameState);
 
-            if (path == null) {
-                continue;
+                if (path == null) {
+                    continue;
+                }
+
+                if (!pathsToTarget.containsKey(path.size())) {
+                    pathsToTarget.put(path.size(), new ArrayList<>());
+                }
+
+                pathsToTarget.get(path.size()).add(path);
             }
-
-            if (!pathsToTarget.containsKey(path.size())) {
-                pathsToTarget.put(path.size(), new ArrayList<>());
-            }
-
-            pathsToTarget.get(path.size()).add(path);
         }
 
         if (pathsToTarget.isEmpty()) {
@@ -230,6 +248,25 @@ public class Day15_BeverageBandits implements Executable {
         return openSpots;
     }
 
+    private List<Coordinates> identifyCharacterOpenSpots(Character currentCharacter, GameState gameState) {
+        List<Coordinates> openSpots = new ArrayList<>();
+
+        if (isOpenSpot(gameState, currentCharacter.getCoordinates().up())) {
+            openSpots.add(currentCharacter.getCoordinates().up());
+        }
+        if (isOpenSpot(gameState, currentCharacter.getCoordinates().down())) {
+            openSpots.add(currentCharacter.getCoordinates().down());
+        }
+        if (isOpenSpot(gameState, currentCharacter.getCoordinates().left())) {
+            openSpots.add(currentCharacter.getCoordinates().left());
+        }
+        if (isOpenSpot(gameState, currentCharacter.getCoordinates().right())) {
+            openSpots.add(currentCharacter.getCoordinates().right());
+        }
+
+        return openSpots;
+    }
+
     private boolean isOpenSpot(GameState gameState, Coordinates coordinates) {
         if (gameState.getMap().getTerrain(coordinates) != TerrainType.OPEN_CAVERN) {
             return false;
@@ -302,7 +339,7 @@ public class Day15_BeverageBandits implements Executable {
     /**
      * https://en.wikipedia.org/wiki/A*_search_algorithm
      */
-    private List<Coordinates> findShortestPath(Coordinates start, Coordinates goal, GameState gameState) {
+    private List<Coordinates> findShortestPathWithAStar(Coordinates start, Coordinates goal, GameState gameState) {
         Set<Coordinates> closedSet = new HashSet<>();
         Set<Coordinates> openSet = new HashSet<>();
         java.util.Map<Coordinates, Coordinates> cameFrom = new HashMap<>();
@@ -324,8 +361,6 @@ public class Day15_BeverageBandits implements Executable {
                     current = cameFrom.get(current);
                     path.add(current);
                 }
-
-                path.remove(path.size() - 1);
 
                 Collections.reverse(path);
 
