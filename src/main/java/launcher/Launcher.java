@@ -75,6 +75,8 @@ public class Launcher {
                 return new Day14_ChocolateCharts();
             case 15:
                 return new Day15_BeverageBandits();
+            case 16:
+                return new Day16_ChronalClassification();
             default:
                 return new Day00_NotDoneYet();
         }
