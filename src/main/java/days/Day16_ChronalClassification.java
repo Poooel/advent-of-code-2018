@@ -16,28 +16,47 @@ import java.util.stream.Stream;
 public class Day16_ChronalClassification implements Executable {
     @Override
     public String executePartOne() {
+        // Read input file
         List<String> input = ChallengeHelper.readInputData(16);
+        // Parse part one of the input file
         List<int[][]> puzzleInput = parsePartOneInput(input);
-        return Integer.toString(testOpCodes(puzzleInput));
+        // Find the frequency of matching opcodes
+        return Integer.toString(testOpcodes(puzzleInput));
     }
 
     @Override
     public String executePartTwo() {
+        // Read input file
         List<String> input = ChallengeHelper.readInputData(16);
+        // Parse part one of the input file
         List<int[][]> puzzleInput = parsePartOneInput(input);
-        Map<Integer, String> opCodes = guessOpCodes(puzzleInput);
+        // Guess the opcodes from the part one input
+        Map<Integer, Integer> opcodes = guessOpcodes(puzzleInput);
+        // Then parse the part two of the input file
         List<int[]> testInput = parsePartTwoInput(input);
-        return Integer.toString(executeTestProgram(testInput,opCodes)[0]);
+        // Compute the test program and return the value of the first register
+        return Integer.toString(executeTestProgram(testInput,opcodes)[0]);
     }
     
-    private int testOpCodes(List<int[][]> puzzleInput) {
+    private int testOpcodes(List<int[][]> puzzleInput) {
+        // The frequency counter for the first part of the puzzle
+        // to keep track of how many times there is 3 or more opcodes matching the result
         int frequencyCounter = 0;
 
+        // For each input that is made of:
+        // - Registers before the instruction has been applied
+        // - The instruction
+        // - Registers after the instruction has been applied
         for (int[][] input : puzzleInput) {
+            // Store registers after the instruction has been applied in a variable for easier access
             int[] after = input[2];
 
-            List<int[]> results = applyOpCodes(input);
+            // Get the registers after each opcode has been applied to the input registers (before registers)
+            List<int[]> results = applyOpcodes(input);
 
+            // If the after register shows up 3 or more times in the results list then increment the frequency counter
+            // using a custom frequency method instead of Collections.frequency() because it uses .equals() instead of
+            // Arrays.equals()
             if (frequency(results, after) >= 3) {
                 frequencyCounter++;
             }
@@ -46,39 +65,25 @@ public class Day16_ChronalClassification implements Executable {
         return frequencyCounter;
     }
 
-    private Map<Integer, String> guessOpCodes(List<int[][]> puzzleInput) {
-        Map<Integer, String> opCodes = new HashMap<>();
-
-        String[] opCodesNames = new String[] {
-            "addr",
-            "addi",
-            "mulr",
-            "muli",
-            "banr",
-            "bani",
-            "borr",
-            "bori",
-            "setr",
-            "seti",
-            "gtir",
-            "gtri",
-            "gtrr",
-            "eqir",
-            "eqri",
-            "eqrr"
-        };
-
-        Map<Integer, Set<Integer>> possiblesOpCodes = new HashMap<>();
+    private Map<Integer, Integer> guessOpcodes(List<int[][]> puzzleInput) {
+        // Map of possibles opcodes for each opcode number
+        Map<Integer, Set<Integer>> possiblesOpcodes = new HashMap<>();
 
         for (int[][] input : puzzleInput) {
             int[] after = input[2];
 
-            List<int[]> results = applyOpCodes(input);
+            List<int[]> results = applyOpcodes(input);
 
-            if (frequency(results, after) >= 1) {
-                possiblesOpCodes.compute(input[1][0], (key, value) -> {
+            // If the after registers is found more than zero time in the results list then
+            // add the id of each occurence in the result list. We add the position in the list
+            // because we know the order in which the opcodes are run.
+            if (frequency(results, after) > 0) {
+                possiblesOpcodes.compute(input[1][0], (key, value) -> {
+                    // If the opcode has not yet been processed then return a new set for the values
                     if (value == null) {
                         return new HashSet<>(occurences(results, after));
+                    // If the opcode has already been processed then add the new values using retainAll
+                    // to only keep the elements that are in both sets
                     } else {
                         value.retainAll(occurences(results, after));
                         return value;
@@ -87,33 +92,43 @@ public class Day16_ChronalClassification implements Executable {
             }
         }
 
-        Map<Integer, Integer> uniqueOpCodes = new HashMap<>();
+        // Map to find out the opcodes.
+        // We will store the opcode number (in the instruction) mapping to the index of the result.
+        // This map will allow us to remove the opcode that have been already found from other sets
+        // (sets from the previous map possiblesOpcodes) to be able to find all the opcodes by elimination.
+        // An opcode is found when the set size is 1 which mean there is only one possibility left.
+        //
+        //  Number in instruction
+        //     |
+        //     |    Index in the results (we know the order in which opcodes are
+        //     |        |                 tested so its the same as having the opcode name)
+        //     v        v
+        Map<Integer, Integer> uniqueOpcodes = new HashMap<>();
 
-        while (uniqueOpCodes.size() != 16) {
-            for (Map.Entry<Integer, Set<Integer>> entry : possiblesOpCodes.entrySet()) {
+        // while we haven't found all the opcodes (we know there is 16 of them)
+        while (uniqueOpcodes.size() != 16) {
+            // add all the found opcodes in the uniqueOpcodes map
+            for (Map.Entry<Integer, Set<Integer>> entry : possiblesOpcodes.entrySet()) {
                 if (entry.getValue().size() == 1) {
-                    List<Integer> opCodeIndex = new ArrayList<>(entry.getValue());
-                    uniqueOpCodes.put(entry.getKey(), opCodeIndex.get(0));
+                    List<Integer> opcodeIndex = new ArrayList<>(entry.getValue());
+                    uniqueOpcodes.put(entry.getKey(), opcodeIndex.get(0));
                 }
             }
 
-            for (Map.Entry<Integer, Integer> uniqueOpCodeEntry : uniqueOpCodes.entrySet()) {
-                for (Map.Entry<Integer, Set<Integer>> possibleOpCodeEntry : possiblesOpCodes.entrySet()) {
-                    if (!uniqueOpCodeEntry.getKey().equals(possibleOpCodeEntry.getKey())) {
-                        possibleOpCodeEntry.getValue().removeAll(Collections.singleton(uniqueOpCodeEntry.getValue()));
+            // remove from the possiblesOpcodes all the confirmed opcodes
+            for (Map.Entry<Integer, Integer> uniqueOpcodeEntry : uniqueOpcodes.entrySet()) {
+                for (Map.Entry<Integer, Set<Integer>> possibleOpcodeEntry : possiblesOpcodes.entrySet()) {
+                    if (!uniqueOpcodeEntry.getKey().equals(possibleOpcodeEntry.getKey())) {
+                        possibleOpcodeEntry.getValue().removeAll(Collections.singleton(uniqueOpcodeEntry.getValue()));
                     }
                 }
             }
         }
 
-        for (Map.Entry<Integer, Set<Integer>> possibleOpCodeEntry : possiblesOpCodes.entrySet()) {
-            opCodes.put(possibleOpCodeEntry.getKey(), opCodesNames[possibleOpCodeEntry.getValue().iterator().next()]);
-        }
-
-        return opCodes;
+        return uniqueOpcodes;
     }
 
-    private List<int[]> applyOpCodes(int[][] input) {
+    private List<int[]> applyOpcodes(int[][] input) {
         int[] before = input[0];
         int[] instruction = input[1];
 
@@ -143,62 +158,66 @@ public class Day16_ChronalClassification implements Executable {
         return results;
     }
 
-    private int[] executeTestProgram(List<int[]> testInput, Map<Integer, String> opCodes) {
+    private int[] executeTestProgram(List<int[]> testInput, Map<Integer, Integer> opcodes) {
+        // Initialize a new registers (initialized to 0)
         int[] register = new int[4];
 
+        // For each instruction in the test program
         for (int[] line : testInput) {
-            String opCode = opCodes.get(line[0]);
+            // Extract everything from the instruction
+            // use our previous results to map the opcode from the instruction to our opcode number
+            int opcode = opcodes.get(line[0]);
             int a = line[1];
             int b = line[2];
             int c = line[3];
 
-            switch (opCode) {
-                case "addr":
+            switch (opcode) {
+                case 0:
                     register = addr(copy(register), a, b, c);
                     break;
-                case "addi":
+                case 1:
                     register = addi(copy(register), a, b, c);
                     break;
-                case "mulr":
+                case 2:
                     register = mulr(copy(register), a, b, c);
                     break;
-                case "muli":
+                case 3:
                     register = muli(copy(register), a, b, c);
                     break;
-                case "banr":
+                case 4:
                     register = banr(copy(register), a, b, c);
                     break;
-                case "bani":
+                case 5:
                     register = bani(copy(register), a, b, c);
                     break;
-                case "borr":
+                case 6:
                     register = borr(copy(register), a, b, c);
                     break;
-                case "bori":
+                case 7:
                     register = bori(copy(register), a, b, c);
                     break;
-                case "setr":
+                case 8:
                     register = setr(copy(register), a, b, c);
                     break;
-                case "seti":
+                case 9:
                     register = seti(copy(register), a, b, c);
                     break;
-                case "gtir":
+                case 10:
                     register = gtir(copy(register), a, b, c);
                     break;
-                case "gtri":
+                case 11:
                     register = gtri(copy(register), a, b, c);
                     break;
-                case "gtrr":
+                case 12:
                     register = gtrr(copy(register), a, b, c);
                     break;
-                case "eqir":
+                case 13:
                     register = eqir(copy(register), a, b, c);
                     break;
-                case "eqri":
+                case 14:
                     register = eqri(copy(register), a, b, c);
                     break;
-                case "eqrr":
+                case 15:
                     register = eqrr(copy(register), a, b, c);
                     break;
             }
@@ -208,9 +227,11 @@ public class Day16_ChronalClassification implements Executable {
     }
 
     private int frequency(List<int[]> list, int[] test) {
+        // The frequency of the test array in the list
         int frequency = 0;
 
         for (int[] ints : list) {
+            // Using Arrays.equals instead of object.equals for a comparison comparing content of the array
             if (Arrays.equals(ints, test)) {
                 frequency++;
             }
@@ -220,8 +241,10 @@ public class Day16_ChronalClassification implements Executable {
     }
 
     private List<Integer> occurences(List<int[]> list, int[] test) {
+        // Store the index of the occurences of test in the list
         List<Integer> occurences = new ArrayList<>();
 
+        // If an array match the test array using Array.equals for the same reason as before, add its index to the list
         for (int i = 0; i < list.size(); i++) {
             if (Arrays.equals(list.get(i), test)) {
                 occurences.add(i);
@@ -238,8 +261,14 @@ public class Day16_ChronalClassification implements Executable {
     private List<int[][]> parsePartOneInput(List<String> input) {
         List<int[][]> puzzleInput = new ArrayList<>();
 
+        // In my input the first part stops at line 3173 so take a sublist from 0 to 3172 (0 based so 3173 -> 3172)
         input = input.subList(0, 3172);
 
+        // Increment by 4 every time because:
+        // - the first line is the before registers
+        // - the second line is the instruction
+        // - the third line is the after registers
+        // - the fourth line is a blank line
         for (int i = 0; i < input.size(); i += 4) {
             puzzleInput.add(new int[][] {
                 convertStringToIntArray(extractArray(input.get(i))),
@@ -254,6 +283,7 @@ public class Day16_ChronalClassification implements Executable {
     private List<int[]> parsePartTwoInput(List<String> input) {
         List<int[]> sampleProgram = new ArrayList<>();
 
+        // As there is a gap of 3 blank line starts at 3174 to the end to only get input for part 2
         input = input.subList(3174, input.size());
 
         for (String line : input) {
@@ -267,10 +297,21 @@ public class Day16_ChronalClassification implements Executable {
      * https://stackoverflow.com/a/18462905/7621349
      */
     private String extractArray(String input) {
+        // Split on spaces and keep the limit to 2:
+        // "Before: [2, 2, 2, 2]"
+        //         ^
+        // "Before:", "[2, 2, 2, 2]"
         return input.split(" ", 2)[1]
+            // remove opening bracket
+            // "2, 2, 2, 2]"
             .replace("[", "")
+            // remove closing bracket
+            // "2, 2, 2, 2"
             .replace("]", "")
+            // remove commas so every number is space separated
+            // "2 2 2 2"
             .replace(",", "")
+            // trim because some of the entries have space as the beginning
             .trim();
     }
 
@@ -278,8 +319,11 @@ public class Day16_ChronalClassification implements Executable {
      * https://stackoverflow.com/a/29219547/7621349
      */
     private int[] convertStringToIntArray(String input) {
+        // Split on spaces
         return Stream.of(input.split(" "))
+            // Parse each string to an integer
             .mapToInt(Integer::parseInt)
+            // convert to an array
             .toArray();
     }
 
