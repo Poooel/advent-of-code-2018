@@ -107,7 +107,8 @@ public class Day16_ChronalClassification implements Executable {
 
         // while we haven't found all the opcodes (we know there is 16 of them)
         while (uniqueOpcodes.size() != 16) {
-            // add all the found opcodes in the uniqueOpcodes map
+            // add all the found opcodes (found opcode mean set size is 1 (there is only one possibility left))
+            // in the uniqueOpcodes map
             for (Map.Entry<Integer, Set<Integer>> entry : possiblesOpcodes.entrySet()) {
                 if (entry.getValue().size() == 1) {
                     List<Integer> opcodeIndex = new ArrayList<>(entry.getValue());
