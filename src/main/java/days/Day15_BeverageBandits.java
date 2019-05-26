@@ -151,10 +151,7 @@ public class Day15_BeverageBandits implements Executable {
 
         if (targets.size() > 0) {
             Character target = chooseTargetsWithFewestHitPoints(targets);
-            System.out.println(String.format("Unit in %s attacked unit in %s.", unit.getCoordinates(), target.getCoordinates()));
             unit.attack(target);
-        } else {
-            System.out.println(String.format("Unit in %s couldn't attack.", unit.getCoordinates()));
         }
     }
 
@@ -173,7 +170,6 @@ public class Day15_BeverageBandits implements Executable {
         List<Path> paths = findPaths(gameState, unit, openSquares);
 
         if (paths.size() == 0) {
-            System.out.println(String.format("Unit in %s couldn't move.", unit.getCoordinates()));
             return;
         }
 
@@ -193,7 +189,6 @@ public class Day15_BeverageBandits implements Executable {
         Coordinates firstStep = sortCoordinates(firstSteps).get(0);
 
         // 6.
-        System.out.println(String.format("Unit in %s moved to %s", unit.getCoordinates(), firstStep));
         unit.moveTo(firstStep);
     }
 
@@ -468,7 +463,6 @@ public class Day15_BeverageBandits implements Executable {
 
             if (target.getHitPoints() <= 0) {
                 target.setDead(true);
-                System.out.println(String.format("Unit in %s killed unit in %s", this.coordinates, target.getCoordinates()));
             }
         }
 
@@ -561,47 +555,5 @@ public class Day15_BeverageBandits implements Executable {
     private enum CharacterType {
         ELF,
         GOBLIN
-    }
-
-    private void debug(GameState gameState) {
-        int height = gameState.getCave().getRawCave().length;
-        int width = gameState.getCave().getRawCave()[0].length;
-
-        char[][] debugMap = new char[height][];
-
-        for (int i = 0; i < height; i++) {
-            debugMap[i] = new char[width];
-            for (int j = 0; j < width; j++) {
-                switch (gameState.getCave().getTerrain(j, i)) {
-                    case WALL:
-                        debugMap[i][j] = '#';
-                        break;
-                    case OPEN_CAVERN:
-                        debugMap[i][j] = '.';
-                        break;
-                }
-            }
-        }
-
-        for (Character character : gameState.getCharacters()) {
-            if (!character.isDead()) {
-                switch (character.getCharacterType()) {
-                    case ELF:
-                        debugMap[character.getCoordinates().getY()][character.getCoordinates().getX()] = 'E';
-                        break;
-                    case GOBLIN:
-                        debugMap[character.getCoordinates().getY()][character.getCoordinates().getX()] = 'G';
-                        break;
-                }
-            }
-        }
-
-        System.out.println(String.format("Round: %d", gameState.getRounds()));
-
-        for (int i = 0; i < height; i++) {
-            System.out.println(new String(debugMap[i]));
-        }
-
-        System.out.println();
     }
 }
