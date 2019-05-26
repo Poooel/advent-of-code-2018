@@ -4,7 +4,6 @@ plugins {
 }
 
 version 'v1'
-sourceCompatibility = 11
 
 repositories {
     mavenCentral()
@@ -17,4 +16,7 @@ dependencies {
     // Lombok
     compileOnly 'org.projectlombok:lombok:1.18.4'
     apt 'org.projectlombok:lombok:1.18.4'
+    
+    // Cloning
+    implementation 'uk.com.robust-it:cloning:1.9.12'
 }

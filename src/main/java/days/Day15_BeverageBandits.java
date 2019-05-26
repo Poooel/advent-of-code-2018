@@ -1,17 +1,22 @@
 package days;
 
+import com.rits.cloning.Cloner;
 import launcher.ChallengeHelper;
 import launcher.Executable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Value;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -19,341 +24,367 @@ public class Day15_BeverageBandits implements Executable {
     @Override
     public String executePartOne() {
         List<String> input = ChallengeHelper.readInputData(15);
-        GameState gameState = parseInitialGameState(input);
-        return String.format("The result of the combat is %d", play(gameState));
-        // This solution doesn't actually work for some obscure reasons
-        // Got the solution thanks to https://lamperi.name/aoc/
+        GameState initialGameState = parseInitialGameState(input);
+        GameState endGameState = proceedToCombat(initialGameState);
+        return Integer.toString(sumOfHitPoints(endGameState.getCharacters()) * endGameState.getRounds());
     }
 
     @Override
     public String executePartTwo() {
-        return null;
-        // This solution doesn't actually work for some obscure reasons
-        // Got the solution thanks to https://lamperi.name/aoc/
-    }
-
-    private int play(GameState gameState) {
-        int rounds = 0;
-        List<Character> characters = gameState.getCharacters();
-
-        while (true) {
-            characters = orderCharacters(characters);
-
-            for (Character character : characters) {
-                debug(gameState, rounds);
-
-                if (!character.isDied()) {
-                    if (isThereTargets(characters, character)) {
-                        if (isInRange(character, characters)) {
-                            // attack
-                            attackWithCharacter(gameState, character);
-                        } else {
-                            // move
-                            moveCharacter(gameState, character);
-                            attackWithCharacter(gameState, character);
-                        }
-                    } else {
-                        // Combat ends
-                        int sum = characters
-                            .stream()
-                            .filter(character1 -> !character1.isDied())
-                            .mapToInt(Character::getHitPoints)
-                            .sum();
-
-                        for (Character charOverview : characters) {
-                            System.out.println(charOverview.toString());
-                        }
-
-                        System.out.println(String.format("Sum of hitpoints: %d", sum));
-                        System.out.println(String.format("Round: %d", rounds));
-                        return sum * rounds;
-                    }
-                }
-            }
-
-            rounds++;
-
-            characters = characters.stream().filter(character -> !character.isDied()).collect(Collectors.toList());
-        }
-    }
-
-    private void moveCharacter(GameState gameState, Character character) {
-        // Target open spots
-        List<Coordinates> openSpots = identifyOpenSpots(character, gameState);
-        // Character open spots
-        List<Coordinates> characterOpenSpots = identifyCharacterOpenSpots(character, gameState);
-
-        // If no target can be reached
-        if (openSpots.isEmpty()) {
-            return;
-        }
-
-        // If the character has no open spot to move to (around him)
-        if (characterOpenSpots.isEmpty()) {
-            return;
-        }
-
-        // Map of int and list of list
-        // int is the length of the path
-        // list of list store the path to the goal, list of list because there can be multiple path for a same length
-        java.util.Map<Integer, List<List<Coordinates>>> pathsToTarget = new HashMap<>();
-
-        for (Coordinates openSpot : openSpots) {
-            for (Coordinates characterOpenSpot : characterOpenSpots) {
-                List<Coordinates> path = findShortestPathWithAStar(characterOpenSpot, openSpot, gameState);
-
-                if (path == null) {
-                    continue;
-                }
-
-                if (!pathsToTarget.containsKey(path.size())) {
-                    pathsToTarget.put(path.size(), new ArrayList<>());
-                }
-
-                pathsToTarget.get(path.size()).add(path);
-            }
-        }
-
-        if (pathsToTarget.isEmpty()) {
-            return;
-        }
-
-        List<List<Coordinates>> shortestPaths = Collections.min(pathsToTarget.entrySet(), Comparator.comparing(java.util.Map.Entry::getKey)).getValue();
-
-        java.util.Map<Coordinates, List<Coordinates>> tiedPaths = new HashMap<>();
-
-        for (List<Coordinates> shortestPath : shortestPaths) {
-            tiedPaths.put(shortestPath.get(shortestPath.size() - 1), shortestPath);
-        }
-
-        List<Coordinates> bestPath = tiedPaths.get(findTopCoordinates(tiedPaths.keySet()));
-
-        character.moveTo(bestPath.get(0));
-    }
-
-    private void attackWithCharacter(GameState gameState, Character character) {
-        List<Character> targetsInRange = getTargetsInRange(character, gameState.getCharacters());
-
-        if (targetsInRange.isEmpty()) {
-            return;
-        }
-
-        int minHitPoints = Integer.MAX_VALUE;
-        List<Character> targetsWithMinHitPoints = new ArrayList<>();
-
-        for (Character target : targetsInRange) {
-            if (target.getHitPoints() < minHitPoints) {
-                minHitPoints = target.getHitPoints();
-                targetsWithMinHitPoints.clear();
-                targetsWithMinHitPoints.add(target);
-            } else if (target.getHitPoints() == minHitPoints) {
-                targetsWithMinHitPoints.add(target);
-            }
-        }
-
-        targetsWithMinHitPoints = orderCharacters(targetsWithMinHitPoints);
-
-        if (character.attack(targetsWithMinHitPoints.get(0))) {
-            gameState.getCharacters().remove(targetsWithMinHitPoints.get(0));
-            targetsWithMinHitPoints.get(0).setDied(true);
-        }
+        List<String> input = ChallengeHelper.readInputData(15);
+        GameState initialGameState = parseInitialGameState(input);
+        GameState endGameState = findProfitableOutcomeForElves(initialGameState);
+        return Integer.toString(sumOfHitPoints(endGameState.getCharacters()) * endGameState.getRounds());
     }
 
     private GameState parseInitialGameState(List<String> input) {
-        Map map = new Map(input.size(), input.get(0).length());
+        Cave cave = new Cave(input.size(), input.get(0).length());
         List<Character> characters = new ArrayList<>();
 
         for (int i = 0; i < input.size(); i++) {
-            String line = input.get(i);
+            char[] line = input.get(i).toCharArray();
 
-            for (int j = 0; j < line.length(); j++) {
-                char terrain = line.charAt(j);
+            for (int j = 0; j < line.length; j++) {
+                char terrain = line[j];
                 Coordinates coordinates = new Coordinates(j, i);
 
                 switch (terrain) {
                     case '#':
-                        map.setTerrain(coordinates, TerrainType.WALL);
+                        cave.setTerrain(coordinates, TerrainType.WALL);
                         break;
                     case '.':
-                        map.setTerrain(coordinates, TerrainType.OPEN_CAVERN);
+                        cave.setTerrain(coordinates, TerrainType.OPEN_CAVERN);
                         break;
                     case 'G':
-                        map.setTerrain(coordinates, TerrainType.OPEN_CAVERN);
+                        cave.setTerrain(coordinates, TerrainType.OPEN_CAVERN);
                         characters.add(new Character(CharacterType.GOBLIN, coordinates));
                         break;
                     case 'E':
-                        map.setTerrain(coordinates, TerrainType.OPEN_CAVERN);
+                        cave.setTerrain(coordinates, TerrainType.OPEN_CAVERN);
                         characters.add(new Character(CharacterType.ELF, coordinates));
                         break;
                 }
             }
         }
 
-        return new GameState(map, characters);
+        return new GameState(cave, characters, 0);
     }
 
-    private boolean isThereTargets(List<Character> characters, Character currentCharacter) {
+    private GameState proceedToCombat(GameState gameState) {
+        List<Character> units = gameState.getCharacters();
+
+        while (true) {
+            units = sortUnits(units);
+
+            for (Character unit : units) {
+                if (!unit.isDead()) {
+                    if (isThereTargets(units, unit)) {
+                        if (isInRangeOfAnotherUnit(units, unit)) {
+                            // attack
+                            attack(units, unit);
+                        } else {
+                            // move
+                            move(gameState, unit);
+                            attack(units, unit);
+                        }
+                    } else {
+                        // no more targets combat ends
+                        return gameState;
+                    }
+
+                    debug(gameState);
+                }
+
+            }
+
+            gameState.setRounds(gameState.getRounds() + 1);
+        }
+    }
+
+    private GameState findProfitableOutcomeForElves(GameState gameState) {
+        int acceptableElvesLosses = 0;
+        int currentAttackPower = 3;
+        int initialNumberOfElves = (int) countElves(gameState.getCharacters());
+        int numberOfElves;
+        Cloner cloner = new Cloner();
+
+        while (true) {
+            GameState currentGameState = proceedToCombat(cloner.deepClone(gameState));
+            numberOfElves = (int) countElves(currentGameState.getCharacters());
+
+            if (initialNumberOfElves - numberOfElves > acceptableElvesLosses) {
+                changeAttackPowerOfElves(gameState, currentAttackPower + 1);
+                currentAttackPower += 1;
+            } else if (initialNumberOfElves - numberOfElves == acceptableElvesLosses) {
+                return currentGameState;
+            }
+        }
+    }
+
+    private long countElves(List<Character> characters) {
         return characters
             .stream()
-            .filter(character -> !character.isDied())
-            .anyMatch(character -> character.getCharacterType() != currentCharacter.getCharacterType());
+            .filter(unit -> unit.getCharacterType() == CharacterType.ELF)
+            .filter(unit -> !unit.isDead())
+            .count();
     }
 
-    private List<Character> identifyTargets(List<Character> characters, Character currentCharacter) {
-        return characters
+    private void changeAttackPowerOfElves(GameState gameState, int attackPower) {
+        for (Character unit : gameState.getCharacters()) {
+            if (unit.getCharacterType() == CharacterType.ELF) {
+                unit.setAttackPower(attackPower);
+            }
+        }
+
+    }
+
+    private int sumOfHitPoints(List<Character> units) {
+        return units
             .stream()
-            .filter(character -> character.getCharacterType() != currentCharacter.getCharacterType())
-            .collect(Collectors.toList());
+            .filter(unit -> !unit.isDead())
+            .mapToInt(Character::getHitPoints)
+            .sum();
     }
 
-    private List<Character> orderCharacters(List<Character> characters) {
-        Comparator<Character> comparator = Comparator.comparing(character -> character.getCoordinates().getY());
+    private void attack(List<Character> units, Character unit) {
+        List<Character> targets = getTargetsInRange(units, unit);
+
+        if (targets.size() > 0) {
+            Character target = chooseTargetsWithFewestHitPoints(targets);
+            System.out.println(String.format("Unit in %s attacked unit in %s.", unit.getCoordinates(), target.getCoordinates()));
+            unit.attack(target);
+        } else {
+            System.out.println(String.format("Unit in %s couldn't attack.", unit.getCoordinates()));
+        }
+    }
+
+    private void move(GameState gameState, Character unit) {
+        // 1. Identify open squares
+        // 2. Compute paths to the destination
+        // 3. If there is multiple equally shortest path to different destinations, choose destination in reading order
+        // 4. Compute all the shortest path to destination
+        // 5. If there is multiple equally shortest path to destination, choose first step in reading order
+        // 6. Move
+
+        // 1.
+        List<Coordinates> openSquares = identifyOpenSquares(gameState, unit);
+
+        // 2.
+        List<Path> paths = findPaths(gameState, unit, openSquares);
+
+        if (paths.size() == 0) {
+            System.out.println(String.format("Unit in %s couldn't move.", unit.getCoordinates()));
+            return;
+        }
+
+        paths = getShortestPaths(paths);
+
+        // 3.
+        List<Coordinates> destinations = paths.stream().map(Path::getDestination).collect(Collectors.toList());
+
+        Coordinates destination = sortCoordinates(destinations).get(0);
+
+        // 4.
+        paths = paths.stream().filter(path -> path.getDestination() == destination).collect(Collectors.toList());
+
+        // 5.
+        List<Coordinates> firstSteps = paths.stream().map(path -> path.getPath().get(0)).collect(Collectors.toList());
+
+        Coordinates firstStep = sortCoordinates(firstSteps).get(0);
+
+        // 6.
+        System.out.println(String.format("Unit in %s moved to %s", unit.getCoordinates(), firstStep));
+        unit.moveTo(firstStep);
+    }
+
+    private List<Path> findPaths(GameState gameState, Character unit, List<Coordinates> openSquares) {
+        List<Path> paths = new ArrayList<>();
+
+        for (Coordinates openSquare : openSquares) {
+            for (Coordinates adjacentCoordinate : unit.getCoordinates().getAdjacentCoordinates()) {
+                if (isOpenSquare(adjacentCoordinate, gameState)) {
+                    List<Coordinates> shortestPath = findShortestPath(adjacentCoordinate, openSquare, gameState);
+
+                    if (shortestPath != null) {
+                        paths.add(
+                            new Path(
+                                adjacentCoordinate,
+                                openSquare,
+                                shortestPath
+                            )
+                        );
+                    }
+                }
+            }
+        }
+
+        return paths;
+    }
+
+    private List<Path> getShortestPaths(List<Path> paths) {
+        List<Path> shortestPaths = new ArrayList<>();
+        int shortestDistance = Integer.MAX_VALUE;
+
+        for (Path path : paths) {
+            if (path.getPath().size() < shortestDistance) {
+                shortestDistance = path.getPath().size();
+                shortestPaths.clear();
+                shortestPaths.add(path);
+            } else if (path.getPath().size() == shortestDistance) {
+                shortestPaths.add(path);
+            }
+        }
+
+        return shortestPaths;
+    }
+
+    private Character chooseTargetsWithFewestHitPoints(List<Character> units) {
+        List<Character> targetsWithFewestHitPoints = new ArrayList<>();
+        int fewestHitPoints = Integer.MAX_VALUE;
+
+        for (Character unit : units) {
+            if (unit.getHitPoints() < fewestHitPoints) {
+                fewestHitPoints = unit.getHitPoints();
+                targetsWithFewestHitPoints.clear();
+                targetsWithFewestHitPoints.add(unit);
+            } else if (unit.getHitPoints() == fewestHitPoints) {
+                targetsWithFewestHitPoints.add(unit);
+            }
+        }
+
+        targetsWithFewestHitPoints = sortUnits(targetsWithFewestHitPoints);
+
+        return targetsWithFewestHitPoints.get(0);
+    }
+
+    private List<Character> sortUnits(List<Character> units) {
+        Comparator<Character> comparator = Comparator.comparing(unit -> unit.getCoordinates().getY());
         comparator = comparator.thenComparing(character -> character.getCoordinates().getX());
 
-        return characters
+        return units
             .stream()
             .sorted(comparator)
             .collect(Collectors.toList());
     }
 
-    private Coordinates findTopCoordinates(Set<Coordinates> coordinates) {
+    private List<Coordinates> sortCoordinates(List<Coordinates> coordinates) {
         Comparator<Coordinates> comparator = Comparator.comparing(Coordinates::getY);
         comparator = comparator.thenComparing(Coordinates::getX);
 
         return coordinates
             .stream()
-            .min(comparator)
-            .get();
+            .sorted(comparator)
+            .collect(Collectors.toList());
     }
 
-    private List<Coordinates> identifyOpenSpots(Character currentCharacter, GameState gameState) {
-        List<Character> targets = identifyTargets(gameState.getCharacters(), currentCharacter);
-        List<Coordinates> openSpots = new ArrayList<>();
-
-        for (Character target : targets) {
-            if (isOpenSpot(gameState, target.getCoordinates().up())) {
-                openSpots.add(target.getCoordinates().up());
-            }
-            if (isOpenSpot(gameState, target.getCoordinates().down())) {
-                openSpots.add(target.getCoordinates().down());
-            }
-            if (isOpenSpot(gameState, target.getCoordinates().left())) {
-                openSpots.add(target.getCoordinates().left());
-            }
-            if (isOpenSpot(gameState, target.getCoordinates().right())) {
-                openSpots.add(target.getCoordinates().right());
-            }
-        }
-
-        return openSpots;
+    private List<Character> identifyPossibleTargets(List<Character> units, Character currentUnit) {
+        return units
+            .stream()
+            .filter(unit -> unit.getCharacterType() != currentUnit.getCharacterType())
+            .filter(unit -> !unit.isDead())
+            .collect(Collectors.toList());
     }
 
-    private List<Coordinates> identifyCharacterOpenSpots(Character currentCharacter, GameState gameState) {
-        List<Coordinates> openSpots = new ArrayList<>();
-
-        if (isOpenSpot(gameState, currentCharacter.getCoordinates().up())) {
-            openSpots.add(currentCharacter.getCoordinates().up());
-        }
-        if (isOpenSpot(gameState, currentCharacter.getCoordinates().down())) {
-            openSpots.add(currentCharacter.getCoordinates().down());
-        }
-        if (isOpenSpot(gameState, currentCharacter.getCoordinates().left())) {
-            openSpots.add(currentCharacter.getCoordinates().left());
-        }
-        if (isOpenSpot(gameState, currentCharacter.getCoordinates().right())) {
-            openSpots.add(currentCharacter.getCoordinates().right());
-        }
-
-        return openSpots;
+    private boolean isThereTargets(List<Character> units, Character currentUnit) {
+        return identifyPossibleTargets(units, currentUnit).size() != 0;
     }
 
-    private boolean isOpenSpot(GameState gameState, Coordinates coordinates) {
-        if (gameState.getMap().getTerrain(coordinates) != TerrainType.OPEN_CAVERN) {
+    private List<Coordinates> identifyOpenSquares(GameState gameState, Character currentUnit) {
+        // 1. Identify possible targets
+        // 2. For each possible target
+        // 3. For each direction (up, down, left, right)
+        // 4. Is it an open square ?
+        // 5. Add open square to set
+        // 6. Return set
+
+        // 1.
+        List<Character> possibleTargets = identifyPossibleTargets(gameState.getCharacters(), currentUnit);
+        Set<Coordinates> openSquares = new HashSet<>();
+
+        // 2.
+        for (Character possibleTarget : possibleTargets) {
+            // 3.
+            for (Coordinates coordinates : possibleTarget.getCoordinates().getAdjacentCoordinates()) {
+                // 4.
+                if (isOpenSquare(coordinates, gameState)) {
+                    // 5.
+                    openSquares.add(coordinates);
+                }
+            }
+        }
+
+        // 6.
+        return new ArrayList<>(openSquares);
+    }
+    
+    private boolean isOpenSquare(Coordinates coordinates, GameState gameState) {
+        // 1. Is it different from terrain OPEN_CAVERN ?
+        // 2. Is there an unit on these coordinates ?
+        // 3. If answer to both of these question is no then it is an open square
+
+        // 1.
+        if (gameState.getCave().getTerrain(coordinates) != TerrainType.OPEN_CAVERN) {
             return false;
-        }
-
-        for (Character character : gameState.getCharacters()) {
-            if (coordinates.equals(character.getCoordinates())) {
-                return false;
+        } else {
+            // 2.
+            for (Character unit : gameState.getCharacters()) {
+                if (unit.isDead()) {
+                    continue;
+                }
+                if (coordinates.equals(unit.getCoordinates())) {
+                    return false;
+                }
             }
         }
 
+        // 3.
         return true;
     }
 
-    private boolean isInRange(Character currentCharacter, List<Character> characters) {
-        for (Character character : characters) {
-            if (character == currentCharacter) {
-                continue;
-            }
-            if (character.isDied()) {
-                continue;
-            }
-            if (character.getCharacterType() == currentCharacter.getCharacterType()) {
-                continue;
-            }
-            if (character.getCoordinates().up().equals(currentCharacter.getCoordinates())) {
-                return true;
-            }
-            if (character.getCoordinates().down().equals(currentCharacter.getCoordinates())) {
-                return true;
-            }
-            if (character.getCoordinates().left().equals(currentCharacter.getCoordinates())) {
-                return true;
-            }
-            if (character.getCoordinates().right().equals(currentCharacter.getCoordinates())) {
-                return true;
+    private boolean isInRangeOfAnotherUnit(List<Character> units, Character currentUnit) {
+        return getTargetsInRange(units, currentUnit).size() != 0;
+    }
+
+    private List<Character> getTargetsInRange(List<Character> units, Character currentUnit) {
+        // 1. Identify possible targets
+        // 2. For each possible target
+        // 3. Is it in range ?
+        // 4. Add it to set of targets in range
+        // 5. Return set
+
+        // 1.
+        List<Character> possibleTargets = identifyPossibleTargets(units, currentUnit);
+        List<Coordinates> unitAdjacentCoordinates = currentUnit.getCoordinates().getAdjacentCoordinates();
+        Set<Character> targetsInRange = new HashSet<>();
+
+        // 2.
+        for (Character possibleTarget : possibleTargets) {
+            // 3.
+            if (unitAdjacentCoordinates.contains(possibleTarget.getCoordinates())) {
+                // 4.
+                targetsInRange.add(possibleTarget);
             }
         }
 
-        return false;
+        // 5.
+        return new ArrayList<>(targetsInRange);
     }
 
-    private List<Character> getTargetsInRange(Character currentCharacter, List<Character> characters) {
-        List<Character> targetsInRange = new ArrayList<>();
-
-        for (Character character : characters) {
-            if (character == currentCharacter) {
-                continue;
-            }
-            if (character.getCharacterType() == currentCharacter.getCharacterType()) {
-                continue;
-            }
-            if (character.getCoordinates().up().equals(currentCharacter.getCoordinates())) {
-                targetsInRange.add(character);
-            }
-            if (character.getCoordinates().down().equals(currentCharacter.getCoordinates())) {
-                targetsInRange.add(character);
-            }
-            if (character.getCoordinates().left().equals(currentCharacter.getCoordinates())) {
-                targetsInRange.add(character);
-            }
-            if (character.getCoordinates().right().equals(currentCharacter.getCoordinates())) {
-                targetsInRange.add(character);
-            }
-        }
-
-        return targetsInRange;
-    }
-
-    /**
-     * https://en.wikipedia.org/wiki/A*_search_algorithm
-     */
-    private List<Coordinates> findShortestPathWithAStar(Coordinates start, Coordinates goal, GameState gameState) {
+    private List<Coordinates> findShortestPath(Coordinates source, Coordinates destination, GameState gameState) {
         Set<Coordinates> closedSet = new HashSet<>();
         Set<Coordinates> openSet = new HashSet<>();
-        java.util.Map<Coordinates, Coordinates> cameFrom = new HashMap<>();
-        java.util.Map<Coordinates, Integer> gScore = new HashMap<>();
-        java.util.Map<Coordinates, Integer> fScore = new HashMap<>();
+        Map<Coordinates, Coordinates> cameFrom = new HashMap<>();
+        Map<Coordinates, Integer> gScore = new HashMap<>();
+        Map<Coordinates, Integer> fScore = new HashMap<>();
 
-        openSet.add(start);
-        gScore.put(start, 0);
-        fScore.put(start, start.distanceTo(goal));
+        openSet.add(source);
+        gScore.put(source, 0);
+        fScore.put(source, source.distanceTo(destination));
 
         while (!openSet.isEmpty()) {
             Coordinates current = getLowestCoordinatesScore(fScore, openSet);
 
-            if (current.equals(goal)) {
+            if (current.equals(destination)) {
                 List<Coordinates> path = new ArrayList<>();
                 path.add(current);
 
@@ -370,44 +401,33 @@ public class Day15_BeverageBandits implements Executable {
             openSet.remove(current);
             closedSet.add(current);
 
-            List<Coordinates> neighbors = new ArrayList<>();
-
-            if (isOpenSpot(gameState, current.up())) {
-                neighbors.add(current.up());
-            }
-            if (isOpenSpot(gameState, current.left())) {
-                neighbors.add(current.left());
-            }
-            if (isOpenSpot(gameState, current.right())) {
-                neighbors.add(current.right());
-            }
-            if (isOpenSpot(gameState, current.down())) {
-                neighbors.add(current.down());
-            }
+            List<Coordinates> neighbors = current.getAdjacentCoordinates();
 
             for (Coordinates neighbor : neighbors) {
-                if (closedSet.contains(neighbor)) {
-                    continue;
+                if (isOpenSquare(neighbor, gameState)) {
+                    if (closedSet.contains(neighbor)) {
+                        continue;
+                    }
+
+                    int tentativeGScore = gScore.get(current) + current.distanceTo(neighbor);
+
+                    if (!openSet.contains(neighbor)) {
+                        openSet.add(neighbor);
+                    } else if (tentativeGScore >= gScore.get(neighbor)) {
+                        continue;
+                    }
+
+                    cameFrom.put(neighbor, current);
+                    gScore.put(neighbor, tentativeGScore);
+                    fScore.put(neighbor, gScore.get(neighbor) + neighbor.distanceTo(destination));
                 }
-
-                int tentativeGScore = gScore.get(current) + current.distanceTo(neighbor);
-
-                if (!openSet.contains(neighbor)) {
-                    openSet.add(neighbor);
-                } else if (tentativeGScore >= gScore.get(neighbor)) {
-                    continue;
-                }
-
-                cameFrom.put(neighbor, current);
-                gScore.put(neighbor, tentativeGScore);
-                fScore.put(neighbor, gScore.get(neighbor) + neighbor.distanceTo(goal));
             }
         }
 
         return null;
     }
 
-    private Coordinates getLowestCoordinatesScore(java.util.Map<Coordinates, Integer> fScore, Set<Coordinates> openSet) {
+    private Coordinates getLowestCoordinatesScore(Map<Coordinates, Integer> fScore, Set<Coordinates> openSet) {
         int min = Integer.MAX_VALUE;
         Coordinates minCoordinates = null;
 
@@ -421,10 +441,13 @@ public class Day15_BeverageBandits implements Executable {
         return minCoordinates;
     }
 
-    @Value
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     private final class GameState {
-        private Day15_BeverageBandits.Map map;
+        private Cave cave;
         private List<Character> characters;
+        private int rounds;
     }
 
     @Data
@@ -432,17 +455,21 @@ public class Day15_BeverageBandits implements Executable {
         private final CharacterType characterType;
         private Coordinates coordinates;
         private int hitPoints = 200;
-        private final int attackPower = 3;
-        private boolean died;
+        private int attackPower = 3;
+        private boolean dead;
 
         Character(CharacterType characterType, Coordinates coordinates) {
             this.characterType = characterType;
             this.coordinates = coordinates;
         }
 
-        boolean attack(Character target) {
+        void attack(Character target) {
             target.setHitPoints(target.getHitPoints() - this.getAttackPower());
-            return target.getHitPoints() <= 0;
+
+            if (target.getHitPoints() <= 0) {
+                target.setDead(true);
+                System.out.println(String.format("Unit in %s killed unit in %s", this.coordinates, target.getCoordinates()));
+            }
         }
 
         void moveTo(Coordinates coordinates) {
@@ -479,38 +506,51 @@ public class Day15_BeverageBandits implements Executable {
         Coordinates right() {
             return new Coordinates(this.getX() - 1, this.getY());
         }
+
+        List<Coordinates> getAdjacentCoordinates() {
+            return Arrays.asList(
+                this.up(),
+                this.down(),
+                this.left(),
+                this.right()
+            );
+        }
     }
 
-    private final class Map {
-        private final TerrainType[][] rawMap;
+    @Getter
+    private final class Cave {
+        private final TerrainType[][] rawCave;
 
-        Map(int height, int width) {
-            rawMap = new TerrainType[height][];
+        Cave(int height, int width) {
+            rawCave = new TerrainType[height][];
 
             for (int i = 0; i < height; i++) {
-                rawMap[i] = new TerrainType[width];
+                rawCave[i] = new TerrainType[width];
             }
         }
 
-        TerrainType getTerrain(int x, int y) {
-            return rawMap[y][x];
+        private TerrainType getTerrain(int x, int y) {
+            return rawCave[y][x];
         }
 
         TerrainType getTerrain(Coordinates coordinates) {
             return getTerrain(coordinates.getX(), coordinates.getY());
         }
 
-        void setTerrain(int x, int y, TerrainType terrainType) {
-            rawMap[y][x] = terrainType;
+        private void setTerrain(int x, int y, TerrainType terrainType) {
+            rawCave[y][x] = terrainType;
         }
 
         void setTerrain(Coordinates coordinates, TerrainType terrainType) {
             setTerrain(coordinates.getX(), coordinates.getY(), terrainType);
         }
+    }
 
-        TerrainType[][] getRawMap() {
-            return rawMap;
-        }
+    @Value
+    private final class Path {
+        private final Coordinates source;
+        private final Coordinates destination;
+        private final List<Coordinates> path;
     }
 
     private enum TerrainType {
@@ -523,16 +563,16 @@ public class Day15_BeverageBandits implements Executable {
         GOBLIN
     }
 
-    private void debug(GameState gameState, int rounds) {
-        int height = gameState.getMap().getRawMap().length;
-        int width = gameState.getMap().getRawMap()[0].length;
+    private void debug(GameState gameState) {
+        int height = gameState.getCave().getRawCave().length;
+        int width = gameState.getCave().getRawCave()[0].length;
 
         char[][] debugMap = new char[height][];
 
         for (int i = 0; i < height; i++) {
             debugMap[i] = new char[width];
             for (int j = 0; j < width; j++) {
-                switch (gameState.getMap().getTerrain(j, i)) {
+                switch (gameState.getCave().getTerrain(j, i)) {
                     case WALL:
                         debugMap[i][j] = '#';
                         break;
@@ -544,7 +584,7 @@ public class Day15_BeverageBandits implements Executable {
         }
 
         for (Character character : gameState.getCharacters()) {
-            if (!character.isDied()) {
+            if (!character.isDead()) {
                 switch (character.getCharacterType()) {
                     case ELF:
                         debugMap[character.getCoordinates().getY()][character.getCoordinates().getX()] = 'E';
@@ -556,7 +596,7 @@ public class Day15_BeverageBandits implements Executable {
             }
         }
 
-        System.out.println(String.format("Round: %d", rounds));
+        System.out.println(String.format("Round: %d", gameState.getRounds()));
 
         for (int i = 0; i < height; i++) {
             System.out.println(new String(debugMap[i]));
