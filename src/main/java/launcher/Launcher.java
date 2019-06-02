@@ -77,6 +77,8 @@ public class Launcher {
                 return new Day15_BeverageBandits();
             case 16:
                 return new Day16_ChronalClassification();
+            case 17:
+                return new Day17_ReservoirResearch();
             default:
                 return new Day00_NotDoneYet();
         }
